@@ -22,6 +22,11 @@ here's a dashboard example of a real-time NBA games : it represents live games ,
   <img src="real-time-nba-game.png" alt="NBA Game">
 </p>
 
+and that's an example of model inferencing using a custom input (Period, game time, AwayTeam Name , HomeTeam Name, Away Score, Home Score)
+<p align="center">
+  <img src="inference-model.png" alt="NBA Game">
+</p>
+
 
 
 Link to a test database with data from 1990 - March 2020 [test nba.db file](https://drive.google.com/file/d/10CBcCLv2N_neFL39ThykcudUVUv5xqLB/view?usp=sharing)
