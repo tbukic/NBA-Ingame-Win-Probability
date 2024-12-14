@@ -7,7 +7,7 @@ This project collects live NBA betting data from various sources, including spor
 
 Contents:
 
-- [covers](https://github.com/klane/databall/tree/main/databall/covers): Scrapy project to scrape point spreads and over/under lines from [covers.com](http://covers.com)
+- [covers](https://github.com/Younes1337/nba-betting-ai/blob/main/utils/DataProviders.py): Scrape Data from various sportsbooks like [bet365.com](https://www.bet365.com/#/HO/)
 - [databall](https://github.com/klane/databall/tree/main/databall): Python module with support functions to perform tasks including collecting stats to a SQLite database, simulating seasons, and customizing plots
 - [docs](https://github.com/klane/databall/tree/main/docs): Code required to build the GitHub Pages [site](https://klane.github.io/databall/) for this project
 - [notebooks](https://github.com/klane/databall/tree/main/notebooks): Jupyter notebooks of all analyses
