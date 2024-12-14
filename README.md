@@ -34,6 +34,4 @@ and that's an example of model inferencing using a custom input (Period, game ti
   <img src="inference-model.png" alt="NBA Game">
 </p>
 
-
-
-Link to a test database with data from 1990 - March 2020 [test nba.db file](https://drive.google.com/file/d/10CBcCLv2N_neFL39ThykcudUVUv5xqLB/view?usp=sharing)
+Link to a historcial NBA play-by-play games data 1990 - March 2022 [Data in Kaggle](https://www.kaggle.com/datasets/xocelyk/nba-pbp)
