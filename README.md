@@ -1,6 +1,5 @@
 # <img src="favicon.ico" width="48"> DataBall: NBA Betting with Machine Learning
 
-[![Test Status](https://github.com/klane/databall/workflows/Tests/badge.svg)](https://github.com/klane/databall/actions)
 [![License](https://img.shields.io/github/license/klane/databall.svg?label=License)](LICENSE)
 
 This project collects live NBA betting data from various sources, including sportsbooks like Bet365 and FanDuel. The data is visualized in real-time through a Streamlit dashboard, providing a seamless user experience. Additionally, we utilize historical NBA game data to train a logistic regression model on approximately 13 million records (2 GB of data), achieving an 86% performance accuracy.
@@ -22,7 +21,7 @@ here's a dashboard example of real-time NBA games: it represents live games, and
 <p align="center">
   <img src="real-time-nba-game.png" alt="NBA Game">
 </p>
-and that's an example of live sportsbooks, where it shows the different prices for each team based on the selected sportsbooks
+and that's an example of live sportsbooks, which it shows the different prices for each team based on the selected sportsbooks
 
 <p align="center">
   <img src="sportsbooks-nba.png" alt="NBA Game">
@@ -34,4 +33,4 @@ and that's an example of model inferencing using a custom input (Period, game ti
   <img src="inference-model.png" alt="NBA Game">
 </p>
 
-Link to a historcial NBA play-by-play games data 1990 - March 2022 [Data in Kaggle](https://www.kaggle.com/datasets/xocelyk/nba-pbp)
+Link to a historical NBA play-by-play games data 1990 - March 2022 [Data in Kaggle](https://www.kaggle.com/datasets/xocelyk/nba-pbp)
