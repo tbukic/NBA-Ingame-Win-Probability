@@ -1,4 +1,12 @@
 # 🏀 NBA Betting AI
+# 🏀 NBA Betting AI
+
+<p align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/en/0/03/NBA_logo.png" alt="NBA Logo" width="200">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Bet365_logo.svg" alt="Bet365 Logo" width="200">
+</p>
+
+NBA Betting AI is a machine learning-powered project designed to predict outcomes of NBA games and assist users in making informed betting decisions. With cutting-edge AI models and data-driven insights, this project aims to revolutionize sports betting by improving prediction accuracy.
 
 ![NBA Betting AI Banner](https://your-image-link-here.com/banner.png)
 
