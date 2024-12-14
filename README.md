@@ -1,51 +1,16 @@
-# 🏀 NBA Betting AI
-# 🏀 NBA Betting AI
+# <img src="docs/assets/icons/favicon.ico" width="48"> DataBall: NBA Betting with Machine Learning
 
-<p align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/en/0/03/NBA_logo.png" alt="NBA Logo" width="200">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Bet365_logo.svg" alt="Bet365 Logo" width="200">
-</p>
+[![Test Status](https://github.com/klane/databall/workflows/Tests/badge.svg)](https://github.com/klane/databall/actions)
+[![License](https://img.shields.io/github/license/klane/databall.svg?label=License)](LICENSE)
 
-NBA Betting AI is a machine learning-powered project designed to predict outcomes of NBA games and assist users in making informed betting decisions. With cutting-edge AI models and data-driven insights, this project aims to revolutionize sports betting by improving prediction accuracy.
+This project combines my interest in data science with my love of sports. I attempt to predict NBA winners against the spread using stats pulled from the [NBA stats website](http://stats.nba.com/) with [nba_api](https://github.com/swar/nba_api) and point spreads and over/under lines from [covers.com](http://covers.com) using the Python web scraping framework [Scrapy](https://scrapy.org/). All code is written in Python and I used the popular machine learning library [scikit-learn](http://scikit-learn.org/stable/) to make all predictions.
 
-![NBA Betting AI Banner](https://your-image-link-here.com/banner.png)
+Contents:
 
-NBA Betting AI is a machine learning-powered project designed to predict outcomes of NBA games and assist users in making informed betting decisions. With cutting-edge AI models and data-driven insights, this project aims to revolutionize sports betting by improving prediction accuracy.
+- [covers](https://github.com/klane/databall/tree/main/databall/covers): Scrapy project to scrape point spreads and over/under lines from [covers.com](http://covers.com)
+- [databall](https://github.com/klane/databall/tree/main/databall): Python module with support functions to perform tasks including collecting stats to a SQLite database, simulating seasons, and customizing plots
+- [docs](https://github.com/klane/databall/tree/main/docs): Code required to build the GitHub Pages [site](https://klane.github.io/databall/) for this project
+- [notebooks](https://github.com/klane/databall/tree/main/notebooks): Jupyter notebooks of all analyses
+- [report](https://github.com/klane/databall/tree/main/report): LaTeX files for report and slides
 
----
-
-## 📜 Table of Contents
-
-1. [Features](#features)
-2. [Setup & Installation](#setup--installation)
-3. [Usage](#usage)
-4. [Methodology](#methodology)
-5. [Project Results](#project-results)
-6. [Tech Stack](#tech-stack)
-7. [Contributing](#contributing)
-8. [License](#license)
-9. [Contact](#contact)
-
----
-
-## 🚀 Features
-
-- Predict NBA game outcomes with high accuracy.
-- Analyze historical data and player statistics for insights.
-- Supports pre-game betting predictions and live updates.
-- Interactive visualization of results and predictions.
-
----
-
-## ⚙️ Setup & Installation
-
-### Prerequisites
-1. Python 3.8 or higher
-2. Git installed on your system
-3. Recommended: A virtual environment for dependency management
-
-### Installation Steps
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Younes1337/nba-betting-ai.git
-   cd nba-betting-ai
+Link to a test database with data from 1990 - March 2020 [test nba.db file](https://drive.google.com/file/d/10CBcCLv2N_neFL39ThykcudUVUv5xqLB/view?usp=sharing)
