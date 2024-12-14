@@ -41,5 +41,14 @@ Clone the repository to your local machine:
 git clone https://github.com/Younes1337/nba-betting-ai.git
 cd nba-betting-ai
 ```
+### 2. Install the requirements
+the project uses many requirements indicated in the requirements.txt file 
+```bash
+pip install -r requirements.txt
+```
+and run the streamlit app using the following command : 
+```bash
+streamlit run APP.py
+```
 
 Link to a historical NBA play-by-play games data 1990 - March 2022 [Data in Kaggle](https://www.kaggle.com/datasets/xocelyk/nba-pbp)
