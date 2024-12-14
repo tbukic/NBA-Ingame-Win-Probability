@@ -1,4 +1,4 @@
-# <img src="docs/assets/icons/favicon.ico" width="48"> DataBall: NBA Betting with Machine Learning
+# <img src="favicon.ico" width="48"> DataBall: NBA Betting with Machine Learning
 
 [![Test Status](https://github.com/klane/databall/workflows/Tests/badge.svg)](https://github.com/klane/databall/actions)
 [![License](https://img.shields.io/github/license/klane/databall.svg?label=License)](LICENSE)
