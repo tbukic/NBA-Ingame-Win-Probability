@@ -18,7 +18,10 @@ That's an overview of the system, first, we scrape live moneyline data from NBA 
 <img src="Arch.png"> 
 
 here's a dashboard example of a real-time NBA games : it represents live games , and the score, price, and the win probability of each team
-<img src="real-time-nba-game.png"> 
+<p align="center">
+  <img src="real-time-nba-game.png" alt="NBA Game">
+</p>
+
 
 
 Link to a test database with data from 1990 - March 2020 [test nba.db file](https://drive.google.com/file/d/10CBcCLv2N_neFL39ThykcudUVUv5xqLB/view?usp=sharing)
