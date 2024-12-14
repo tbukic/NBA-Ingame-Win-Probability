@@ -33,4 +33,13 @@ and that's an example of model inferencing using a custom input (Period, game ti
   <img src="inference-model.png" alt="NBA Game">
 </p>
 
+## How to Run the App
+
+### 1. Clone the Repository
+Clone the repository to your local machine:
+```bash
+git clone https://github.com/Younes1337/nba-betting-ai.git
+cd nba-betting-ai
+```
+
 Link to a historical NBA play-by-play games data 1990 - March 2022 [Data in Kaggle](https://www.kaggle.com/datasets/xocelyk/nba-pbp)
