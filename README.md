@@ -7,10 +7,10 @@ This project collects live NBA betting data from various sources, including spor
 
 Contents:
 
-- [covers](https://github.com/Younes1337/nba-betting-ai/blob/main/utils/DataProviders.py): Scrape Data from various sportsbooks like [bet365.com](https://www.bet365.com/#/HO/)
-- [databall](https://github.com/klane/databall/tree/main/databall): Python module with support functions to perform tasks including collecting stats to a SQLite database, simulating seasons, and customizing plots
-- [docs](https://github.com/klane/databall/tree/main/docs): Code required to build the GitHub Pages [site](https://klane.github.io/databall/) for this project
-- [notebooks](https://github.com/klane/databall/tree/main/notebooks): Jupyter notebooks of all analyses
-- [report](https://github.com/klane/databall/tree/main/report): LaTeX files for report and slides
+- [DataProviders](https://github.com/Younes1337/nba-betting-ai/blob/main/utils/DataProviders.py): Scrape Data from various sportsbooks like [bet365.com](https://www.bet365.com/#/HO/)
+- [utils](https://github.com/Younes1337/nba-betting-ai/blob/main/utils/utils.py): Python utils functions (Helpers) that help to calculate or convert metrics.
+- [Inference Model](https://github.com/Younes1337/nba-betting-ai/blob/main/pages/inference_model.py): This Python streamlit page contains a UI to allow the user to test the model with a custom input.
+- [notebook](https://github.com/Younes1337/nba-betting-ai/blob/main/Model/NBA%20Model.ipynb): Jupyter notebook that contains the process of developing the logistic regression model.
+- [Main APP](https://github.com/Younes1337/nba-betting-ai/blob/main/APP.py): The Main App that contains the logic used in the application.
 
 Link to a test database with data from 1990 - March 2020 [test nba.db file](https://drive.google.com/file/d/10CBcCLv2N_neFL39ThykcudUVUv5xqLB/view?usp=sharing)
