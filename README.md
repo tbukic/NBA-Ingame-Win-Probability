@@ -14,6 +14,7 @@ This project collects live NBA betting data from various sources, including spor
 - [Main APP](https://github.com/Younes1337/nba-betting-ai/blob/main/APP.py): The Main App that contains the logic used in the application.
 
 ## Architecture
-
+That's an overview of the system, 
+<img src="Arch.png" width="48"> DataBall: NBA Betting with Machine Learning
 
 Link to a test database with data from 1990 - March 2020 [test nba.db file](https://drive.google.com/file/d/10CBcCLv2N_neFL39ThykcudUVUv5xqLB/view?usp=sharing)
