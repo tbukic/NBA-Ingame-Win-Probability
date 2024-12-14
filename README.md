@@ -17,12 +17,19 @@ This project collects live NBA betting data from various sources, including spor
 That's an overview of the system, first, we scrape live moneyline data from NBA ESPN for the ongoing games, and also scrape other live moneyline data from different sportsbooks using Python scrapping package and Pandas to manipulate the data besides a real-time machine learning model that predict for each game the team's win probability, the model developed using Skiti-learn which is Logistic regression model, you can find the model here [Logistic Regression Model](https://github.com/Younes1337/nba-betting-ai/blob/main/Model/multi_output_model.pkl), then we used a streamlit UI to make a seamless dashboard for the live data also a page for model inference to test the model on a custom input.
 <img src="Arch.png"> 
 
-here's a dashboard example of a real-time NBA games : it represents live games , and the score, price, and the win probability of each team
+here's a dashboard example of real-time NBA games: it represents live games, and the score, price, and win probability of each team
+
 <p align="center">
   <img src="real-time-nba-game.png" alt="NBA Game">
 </p>
+and that's an example of live sportsbooks, where it shows the different prices for each team based on the selected sportsbooks
 
-and that's an example of model inferencing using a custom input (Period, game time, AwayTeam Name , HomeTeam Name, Away Score, Home Score)
+<p align="center">
+  <img src="sportsbooks-nba.png" alt="NBA Game">
+</p>
+
+and that's an example of model inferencing using a custom input (Period, game time, AwayTeam Name, HomeTeam Name, Away Score, Home Score)
+
 <p align="center">
   <img src="inference-model.png" alt="NBA Game">
 </p>
