@@ -89,7 +89,6 @@ After training, the model is evaluated on the testing data (20% of the dataset),
 
 Testing provides a more realistic estimate of the model's ability to generalize to new, unseen data.
 
-### example of training data 
 ## Example Dataset
 
 Below is an example of the basketball game dataset used in this project:
@@ -109,6 +108,19 @@ Below is an example of the basketball game dataset used in this project:
 - **Away Score**: Score of the away team.
 - **Home Team**: Abbreviation of the home team's name.
 - **Home Score**: Score of the home team.
+
+### Testing the model
+The following sample data represents the initial state of a basketball game:
+
+| Period | Time    | Away Team | Away Score | Home Team | Home Score |
+|--------|---------|-----------|------------|-----------|------------|
+| 1      | 12:00.0 | SAS       | 0          | MIN       | 13         |
+
+
+When the sample input data above is processed by the model, the output is as follows:
+
+- **Predicted HomeWin Probability**: `0.8821`
+- **Predicted AwayWin Probability**: `0.0664`
 
 ## How to Run the App
 
