@@ -43,15 +43,14 @@ One predicts the probability of the home team winning (HomeWin).
 
 The other predicts the probability of the away team winning (AwayWin).
 
-What is Logistic Regression?
+### What is Logistic Regression?
 
 Logistic Regression is a statistical model used for binary classification. It estimates the probability of an instance belonging to a particular class (e.g., win or loss). The model learns a set of weights for the input features, which are used to calculate a probability score. If the probability exceeds a certain threshold (commonly 0.5), the model predicts that the instance belongs to that class.
 
-MultiOutputClassifier
+### MultiOutputClassifier
 
 In this project, the two Logistic Regression models are trained simultaneously using the MultiOutputClassifier from scikit-learn. This lets the model learn the relationships between the input features and target variables (HomeWin and AwayWin) simultaneously.
 
-Features and Their Importance
 
 ### Key Features:
 
