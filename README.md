@@ -89,6 +89,27 @@ After training, the model is evaluated on the testing data (20% of the dataset),
 
 Testing provides a more realistic estimate of the model's ability to generalize to new, unseen data.
 
+### example of training data 
+## Example Dataset
+
+Below is an example of the basketball game dataset used in this project:
+
+| Period  | Time   | Away Team | Away Score | Home Team | Home Score |
+|---------|--------|-----------|------------|-----------|------------|
+| 4       | 0:08.7 | POR       | 91         | NJN       | 87         |
+| 4       | 0:08.7 | POR       | 91         | NJN       | 87         |
+| 4       | 0:04.9 | POR       | 91         | NJN       | 87         |
+| 4       | 0:03.7 | POR       | 91         | NJN       | 87         |
+| 4       | 0:00.0 | POR       | 91         | NJN       | 87         |
+
+### Column Descriptions
+- **Period**: The current period of the game.
+- **Time**: Time remaining in the current period (minutes:seconds.tenths).
+- **Away Team**: Abbreviation of the away team's name.
+- **Away Score**: Score of the away team.
+- **Home Team**: Abbreviation of the home team's name.
+- **Home Score**: Score of the home team.
+
 ## How to Run the App
 
 ### 1. Clone the Repository
