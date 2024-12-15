@@ -33,9 +33,9 @@ and that's an example of model inferencing using a custom input (Period, game ti
   <img src="inference-model.png" alt="NBA Game">
 </p>
 
-## Multi-output Logistic Regression Model
+# Multi-output Logistic Regression Model
 
-# Model Explanation
+## Model Explanation
 
 The model employs a Multi-output Logistic Regression approach. This essentially combines two Logistic Regression models:
 
@@ -53,15 +53,15 @@ In this project, the two Logistic Regression models are trained simultaneously u
 
 Features and Their Importance
 
-Key Features:
+### Key Features:
 
-AwayScore and HomeScore:
+* AwayScore and HomeScore:
 
 Represent the current state of the game.
 
 Higher scores for a team generally indicate a higher chance of winning.
 
-TimeRemaining:
+* TimeRemaining:
 
 Captures the game's context.
 
@@ -75,7 +75,7 @@ Based on historical performance and training data, the model learns to associate
 
 Training and Testing Results
 
-Training:
+* Training:
 
 The model is trained on 80% of the dataset.
 
@@ -83,7 +83,7 @@ During training, it learns the relationships between the features and the target
 
 High accuracy on training data is expected, but it is not the primary metric for evaluating performance.
 
-Testing:
+* Testing:
 
 After training, the model is evaluated on the testing data (20% of the dataset), which the model has not seen before.
 
