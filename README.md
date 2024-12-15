@@ -89,6 +89,17 @@ After training, the model is evaluated on the testing data (20% of the dataset),
 
 Testing provides a more realistic estimate of the model's ability to generalize to new, unseen data.
 
+### Best Model Parameters
+
+The Logistic Regression model was fine-tuned using hyperparameter optimization using GridSearch technique, resulting in the following best parameters:
+
+| Parameter               | Value  |
+|-------------------------|--------|
+| **`C`**                | 1      |
+| **`penalty`**          | l2     |
+| **`solver`**           | lbfgs  |
+| **`max_iter`**         | 1000   |
+
 ## Example Dataset
 
 Below is an example of the basketball game dataset used in this project:
