@@ -33,6 +33,62 @@ and that's an example of model inferencing using a custom input (Period, game ti
   <img src="inference-model.png" alt="NBA Game">
 </p>
 
+## Multi-output Logistic Regression Model
+
+# Model Explanation
+
+The model employs a Multi-output Logistic Regression approach. This essentially combines two Logistic Regression models:
+
+One predicts the probability of the home team winning (HomeWin).
+
+The other predicts the probability of the away team winning (AwayWin).
+
+What is Logistic Regression?
+
+Logistic Regression is a statistical model used for binary classification. It estimates the probability of an instance belonging to a particular class (e.g., win or loss). The model learns a set of weights for the input features, which are used to calculate a probability score. If the probability exceeds a certain threshold (commonly 0.5), the model predicts that the instance belongs to that class.
+
+MultiOutputClassifier
+
+In this project, the two Logistic Regression models are trained simultaneously using the MultiOutputClassifier from scikit-learn. This lets the model learn the relationships between the input features and target variables (HomeWin and AwayWin) simultaneously.
+
+Features and Their Importance
+
+Key Features:
+
+AwayScore and HomeScore:
+
+Represent the current state of the game.
+
+Higher scores for a team generally indicate a higher chance of winning.
+
+TimeRemaining:
+
+Captures the game's context.
+
+As time runs out, the probability of a comeback might either increase or decrease depending on the score difference.
+
+AwayName_encoded and HomeName_encoded:
+
+Represent the teams playing.
+
+Based on historical performance and training data, the model learns to associate certain teams with higher or lower win probabilities.
+
+Training and Testing Results
+
+Training:
+
+The model is trained on 80% of the dataset.
+
+During training, it learns the relationships between the features and the target variables by adjusting the weights of the Logistic Regression models.
+
+High accuracy on training data is expected, but it is not the primary metric for evaluating performance.
+
+Testing:
+
+After training, the model is evaluated on the testing data (20% of the dataset), which the model has not seen before.
+
+Testing provides a more realistic estimate of the model's ability to generalize to new, unseen data.
+
 ## How to Run the App
 
 ### 1. Clone the Repository
