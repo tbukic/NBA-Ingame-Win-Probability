@@ -99,6 +99,28 @@ The Logistic Regression model was fine-tuned using hyperparameter optimization u
 | **`solver`**           | lbfgs  |
 | **`max_iter`**         | 1000   |
 
+### Classification Report for HomeWin and AwayWin
+
+| Class     | Precision | Recall | F1-Score | Support |
+|-----------|-----------|--------|----------|---------|
+| HomeWin   | 0.91      | 0.88   | 0.89     | 9825    |
+| AwayWin   | 0.87      | 0.82   | 0.84     | 8456    |
+
+### Averages
+| Metric         | Micro Avg | Macro Avg | Weighted Avg | Total Support |
+|----------------|-----------|-----------|--------------|---------------|
+| Precision      | 0.89      | 0.89      | 0.89         | 18281         |
+| Recall         | 0.85      | 0.85      | 0.85         | 18281         |
+| F1-Score       | 0.87      | 0.87      | 0.87         | 18281         |
+
+### Notes
+- **Precision**: The proportion of true positive predictions to the total predicted positives for each class.
+- **Recall**: The proportion of true positive predictions to each class's total positives.
+- **F1-Score**: The harmonic mean of precision and recall, balancing their contributions.
+- **Support**: The total number of actual instances for each class.
+
+This report demonstrates strong model performance, particularly for predicting `HomeWin` outcomes with a high F1-score of 0.89.
+
 ## Example Dataset
 
 Below is an example of the basketball game dataset used in this project:
