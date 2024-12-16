@@ -154,6 +154,12 @@ we used another metric, which ROC curve to track the performance of the logistic
 
 The ROC curves demonstrate that the models are performing exceptionally well, showcasing their strong ability to distinguish between the classes effectively.
 
+To trake the model we used another curve which is "he Learning Curve that illustrates the model's performance as the training set size increases. It helps identify if the model is underfitting or overfitting by comparing the training and validation scores. In this project, the Logistic Regression model, wrapped in a MultiOutputClassifier, predicts `HomeWin` and `AwayWin`. The curve shows how accuracy improves with more training data, providing insights into the model's ability to generalize.
+
+<p align="center">
+  <img src="learning_curve.png" alt="NBA Game">
+</p>
+
 ### Testing the model
 The following sample data represents the initial state of a basketball game:
 
@@ -167,11 +173,6 @@ When the sample input data above is processed by the model, the output is as fol
 - **Predicted HomeWin Probability**: `0.8821`
 - **Predicted AwayWin Probability**: `0.0664`
 
-To take the model we used another curve which is "he Learning Curve that illustrates the model's performance as the training set size increases. It helps identify if the model is underfitting or overfitting by comparing the training and validation scores. In this project, the Logistic Regression model, wrapped in a MultiOutputClassifier, predicts `HomeWin` and `AwayWin`. The curve shows how accuracy improves with more training data, providing insights into the model's ability to generalize.
-
-<p align="center">
-  <img src="learning_curve.png" alt="NBA Game">
-</p>
 
 ## How to Run the App
 
