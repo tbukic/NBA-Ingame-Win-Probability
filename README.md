@@ -160,7 +160,14 @@ To track the model we used another curve which is the Learning Curve that illust
   <img src="learning_curve.png" alt="NBA Game">
 </p>
 
-### Testing the model
+There are other ways to test the model performance: 
+* Calibration Curve:  is a graphical representation used to assess the calibration of a predictive model, especially in classification tasks. Calibration refers to how well the predicted probabilities of a model align with the actual outcomes.
+
+<p align="center">
+  <img src="calibration_curve.png" alt="NBA Game">
+</p>
+
+### Inferencing the model
 The following sample data represents the initial state of a basketball game:
 
 | Period | Time    | Away Team | Away Score | Home Team | Home Score |
