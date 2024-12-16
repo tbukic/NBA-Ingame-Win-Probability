@@ -90,7 +90,7 @@ A `LogisticRegression` model was trained and tested, wrapped in `MultiOutputClas
 
 ### Best Model Parameters
 
-The Logistic Regression model was fine-tuned using hyperparameter optimization using GridSearch technique, resulting in the following best parameters:
+The Logistic Regression model was fine-tuned using hyperparameter optimization using the GridSearch technique, resulting in the following best parameters:
 
 | Parameter               | Value  |
 |-------------------------|--------|
@@ -117,7 +117,7 @@ The Logistic Regression model was fine-tuned using hyperparameter optimization u
 - **Precision**: The proportion of true positive predictions to the total predicted positives for each class.
 - **Recall**: The proportion of true positive predictions to each class's total positives.
 - **F1-Score**: The harmonic mean of precision and recall, balancing their contributions.
-- **Support**: The total number of actual instances for each class.
+- **Support**: The total number of instances for each class.
 
 This report demonstrates strong model performance, particularly for predicting `HomeWin` outcomes with a high F1-score of 0.89.
 
@@ -142,19 +142,13 @@ Below is an example of the basketball game dataset used in this project:
 - **Home Score**: Score of the home team.
 
 we used another metric, which ROC curve to track the performance of the logistic regression models
-* For the home team model : 
 <p align="center">
-  <img src="roc_curve_home_win.png" alt="NBA Game">
-</p>
-
-* For the away team model : 
-<p align="center">
-  <img src="roc_curve_away_win.png" alt="NBA Game">
+  <img src="ROC_curve.png" alt="NBA Game">
 </p>
 
 The ROC curves demonstrate that the models are performing exceptionally well, showcasing their strong ability to distinguish between the classes effectively.
 
-To trake the model we used another curve which is the Learning Curve that illustrates the model's performance as the training set size increases. It helps identify if the model is underfitting or overfitting by comparing the training and validation scores. In this project, the Logistic Regression model, wrapped in a MultiOutputClassifier, predicts `HomeWin` and `AwayWin`. The curve shows how accuracy improves with more training data, providing insights into the model's ability to generalize.
+To track the model we used another curve which is the Learning Curve that illustrates the model's performance as the training set size increases. It helps identify if the model is underfitting or overfitting by comparing the training and validation scores. In this project, the Logistic Regression model, wrapped in a MultiOutputClassifier, predicts `HomeWin` and `AwayWin`. The curve shows how accuracy improves with more training data, providing insights into the model's ability to generalize.
 
 <p align="center">
   <img src="learning_curve.png" alt="NBA Game">
