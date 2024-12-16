@@ -141,6 +141,19 @@ Below is an example of the basketball game dataset used in this project:
 - **Home Team**: Abbreviation of the home team's name.
 - **Home Score**: Score of the home team.
 
+we used another metric, which ROC curve to track the performance of the logistic regression models
+* For the home team model : 
+<p align="center">
+  <img src="roc_curve_home_win.png" alt="NBA Game">
+</p>
+
+* For the away team model : 
+<p align="center">
+  <img src="roc_curve_away_win.png" alt="NBA Game">
+</p>
+
+The ROC curves demonstrate that the models are performing exceptionally well, showcasing their strong ability to distinguish between the classes effectively.
+
 ### Testing the model
 The following sample data represents the initial state of a basketball game:
 
