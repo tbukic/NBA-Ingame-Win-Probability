@@ -84,9 +84,9 @@ High accuracy on training data is expected, but it is not the primary metric for
 
 * Testing:
 
-After training, the model is evaluated on the testing data (20% of the dataset), which the model has not seen before.
+To evaluate the model, we began by preprocessing the dataset, encoding categorical variables (`AwayName` and `HomeName`) using `LabelEncoder`, and dropping irrelevant columns. The data was split into training and testing sets (80-20 ratio), with features (`X`) and multi-label targets (`y`) for `HomeWin` and `AwayWin`. 
 
-Testing provides a more realistic estimate of the model's ability to generalize to new, unseen data.
+A `LogisticRegression` model was trained and tested, wrapped in `MultiOutputClassifier`. Key metrics such as accuracy, precision, recall, and F1-scores were computed, and predicted probabilities for each outcome were extracted. ROC curves with AUC scores were plotted for `HomeWin` and `AwayWin`, demonstrating strong model performance. Additionally, win probabilities were mapped back to team names for interpretability, providing clear and actionable insights.
 
 ### Best Model Parameters
 
