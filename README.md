@@ -21,7 +21,7 @@ here's a dashboard example of real-time NBA games: it represents live games, and
 <p align="center">
   <img src="real-time-nba-game.png" alt="NBA Game">
 </p>
-and that's an example of live sportsbooks, which it shows the different prices for each team based on the selected sportsbooks
+and that's an example of live sportsbooks, which shows the different prices for each team based on the selected sportsbooks
 
 <p align="center">
   <img src="sportsbooks-nba.png" alt="NBA Game">
@@ -71,6 +71,12 @@ AwayName_encoded and HomeName_encoded:
 Represent the teams playing.
 
 Based on historical performance and training data, the model learns to associate certain teams with higher or lower win probabilities.
+
+To assess the relationship between the features, we utilize a confusion matrix, which helps quantify the degree of correlation between them by comparing predicted and actual values
+
+<p align="center">
+  <img src="heatmap.png" alt="NBA Game">
+</p>
 
 Training and Testing Results
 
