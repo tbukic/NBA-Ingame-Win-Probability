@@ -1,4 +1,4 @@
-# <img src="favicon.ico" width="48"> DataBall: NBA Betting with Machine Learning
+# <img src="favicon.ico" width="48"> ML-Betting-Odds: NBA Betting with Machine Learning
 
 [![License](https://img.shields.io/github/license/klane/databall.svg?label=License)](LICENSE)
 
