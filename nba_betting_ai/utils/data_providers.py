@@ -1,6 +1,7 @@
 import pandas as pd # type: ignore
-from sbrscrape import Scoreboard # type: ignore
+
 from datetime import datetime
+from sbrscrape import Scoreboard # type: ignore
 
 
 class SbrOddsProvider:

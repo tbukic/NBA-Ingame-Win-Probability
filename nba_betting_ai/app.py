@@ -1,8 +1,9 @@
 import streamlit as st # type: ignore
-from utils.utils import *
-from utils.DataProviders import SbrOddsProvider
 import time
-from Model.prediction import trans_data, extract_game_data
+
+from nba_betting_ai.model.prediction import trans_data, extract_game_data
+from nba_betting_ai.utils.data_providers import SbrOddsProvider
+from nba_betting_ai.utils.utils import moneyline_to_probability
 
 # Set Streamlit page config for better visuals
 st.set_page_config(page_title="NBA Live Scores", page_icon="🏀", layout="wide")

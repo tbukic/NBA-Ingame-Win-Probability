@@ -1,7 +1,8 @@
-import streamlit as st
 import pandas as pd
-import random  # Ensure random module is imported
-from Model.prediction import trans_data
+import random
+import streamlit as st
+
+from nba_betting_ai.model.prediction import trans_data
 
 # List of all 30 NBA teams with their 3-letter abbreviations
 team_list = [

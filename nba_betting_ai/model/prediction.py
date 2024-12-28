@@ -1,9 +1,11 @@
-import pandas as pd # type: ignore
-from nba_api.live.nba.endpoints import scoreboard # type: ignore
-from sklearn.preprocessing import LabelEncoder # type: ignore
-import joblib # type: ignore
-from utils.utils import *
-import streamlit as st # type: ignore
+import joblib
+import pandas as pd
+import streamlit as st
+
+from nba_api.live.nba.endpoints import scoreboard
+from sklearn.preprocessing import LabelEncoder
+
+from nba_betting_ai.utils.utils import parse_time, convert_time_to_seconds
 
 
 @st.cache_resource
