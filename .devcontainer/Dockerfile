@@ -45,11 +45,6 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
         ca-certificates \
         openssh-client gnupg2 gnupg-agent \
         build-essential \
-        # python${PYTHON_VERSION} \
-        # python${PYTHON_VERSION}-dev \
-        # python3-pip \
-        # python3-venv \
-        # libpython${PYTHON_VERSION} \
         wget \
         git \
         curl \
