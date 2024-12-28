@@ -1,0 +1,59 @@
+[project]
+name = "nba-betting-ai"
+version = "0.1.0"
+description = ""
+authors = [{name="Tomislav Bukic", email="tomislav@bukic.net"}]
+readme = "README.md"
+dependencies = [
+    "attrs>=24.3.0",
+    "bs4>=0.0.2",
+    "nba-api>=1.6.1",
+    "requests>=2.32.3",
+    "sbrscrape>=0.0.10",
+    "streamlit>=1.41.1",
+    "tqdm>=4.67.1",
+]
+
+
+[tool.uv]
+dev-dependencies = [
+    "ipykernel>=6.29",
+    "pre-commit>=4.0",
+    "nbdev>=2.3",
+    "poethepoet>=0.29",
+    "ruff>=0.6.2",
+    "nbconvert>=7.16",
+    "pytest>=8.3"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.poe.poetry_hooks]
+post_install = "post_install"
+
+[tool.poe.tasks]
+
+    [tool.poe.tasks.pre_commit]
+    shell = "pre-commit install"
+
+    [tool.poe.tasks.post_install]
+    sequence = ["pre_commit"]
+
+    [tool.poe.tasks.deploy]
+    shell = "docker compose -f deploy/docker-compose.yml up"
+
+    [tool.poe.tasks.dev]
+    shell = "fastapi dev nba-betting-ai/app.py"
+    
+    [tool.poe.tasks.app]
+    shell = "fastapi run nba-betting-ai/app.py --port ${PORT:-80}"
+    args = [{ name = "PORT", positional = true}]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-rA"
+testpaths = [
+    "tests",
+]

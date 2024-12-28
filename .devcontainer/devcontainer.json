@@ -1,0 +1,28 @@
+{
+    "name": "NBA-Betting-AI",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "nba-betting-ai",
+	"workspaceFolder": "/workspaces/nba-betting-ai",
+	"privileged": true,
+	"postCreateCommand": "if [ -d \".venv\" ]; then rm -rf .venv; fi && uv sync",
+	"customizations": {
+		"vscode": {
+			"settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+				"python.defaultInterpreterPath": "/workspaces/${localWorkspaceFolderBasename}/.venv/bin/python"
+			},
+            "profiles": {
+                "bash": {
+                    "path": "/bin/bash"
+                }
+            },
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+                "ms-python.python",
+				"ms-toolsai.jupyter",
+				"ms-toolsai.vscode-jupyter-powertoys",
+				"eamodio.gitlens"
+			]
+		}
+	}
+}

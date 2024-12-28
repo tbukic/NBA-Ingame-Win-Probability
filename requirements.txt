@@ -1,5 +1,0 @@
-streamlit
-sbrscrape
-nba_api
-bs4
-requests

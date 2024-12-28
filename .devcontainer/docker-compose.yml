@@ -1,0 +1,41 @@
+services:
+  nba-betting-ai:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        UBUNTU_VARIANT: "24.04"
+        PYTHON_VERSION: "3.12"
+        NODE_VERSION: "v0.40.1"
+        NVM_VERSION: "22.0.0"
+        USERNAME: ${USERNAME}
+        USER_UID: "1000"
+        USER_GID: "1000"
+        UV_VERSION: "0.5.7"
+        PROJDIR: "/workspaces/nba-betting-ai"
+        PROJECT_NAME: "nba-betting-ai"
+    command: sleep infinity
+    environment:
+      POSTGRES_PASSWORD: 'develop_password'
+      POSTGRES_USER: 'develop'
+      POSTGRES_DB: 'nba_betting'
+    volumes:
+      - ..:/workspaces/nba-betting-ai:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/${USERNAME}/.docker:/home/${USERNAME}/.docker
+      - /home/${USERNAME}/.bash_history:/home/${USERNAME}/.bash_history
+      - /home/${USERNAME}/.cache:/home/${USERNAME}/.cache
+    links:
+      - postgress
+  
+  postgress:
+    image: postgres:17.2-bookworm
+    ports:
+      - "5432:5432"
+    volumes:
+      - /data/mounts/postgress_nba_betting:/dev/shm
+    environment:
+      POSTGRESS_PASSWORD: 'develop_password'
+      POSTGRESS_USER: 'develop'
+      POSTGRESS_DB: 'nba_betting'
+    restart: always
