@@ -6,8 +6,6 @@ services:
       args:
         UBUNTU_VARIANT: "24.04"
         PYTHON_VERSION: "3.12"
-        NODE_VERSION: "v0.40.1"
-        NVM_VERSION: "22.0.0"
         USERNAME: ${USERNAME}
         USER_UID: "1000"
         USER_GID: "1000"

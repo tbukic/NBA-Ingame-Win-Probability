@@ -82,13 +82,6 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
 
 USER $USERNAME
 
-# Frontend
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/${NODE_VERSION}/install.sh | bash \
-    && export NVM_DIR="$HOME/.nvm" \
-    && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
-    && nvm install ${NVM_VERSION}
-ENV NVM_DIR="/home/${USERNAME}/.nvm"
-
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 WORKDIR ${PROJDIR}
