@@ -4,6 +4,7 @@ ARG USERNAME="user"
 ARG USER_UID="1000"
 ARG USER_GID=${USER_UID}
 ARG PYTHON_VERSION='3.10'
+ARG POSTGRES_VERSION='16'
 ARG NODE_VERSION='v0.40.1'
 ARG NVM_VERSION='22.0.0'
 ARG PROJECT_NAME='project'
@@ -20,6 +21,7 @@ ARG USERNAME
 ARG USER_UID
 ARG USER_GID
 ARG PYTHON_VERSION
+ARG POSTGRES_VERSION
 ARG NODE_VERSION
 ARG NVM_VERSION
 ARG PROJECT_NAME
@@ -45,6 +47,7 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
         ca-certificates \
         openssh-client gnupg2 gnupg-agent \
         build-essential \
+        postgresql-${POSTGRES_VERSION} postgresql-contrib-${POSTGRES_VERSION} \
         wget \
         git \
         curl \

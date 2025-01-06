@@ -3,7 +3,7 @@ import time
 
 from nba_betting_ai.model.prediction import trans_data, extract_game_data
 from nba_betting_ai.utils.data_providers import SbrOddsProvider
-from nba_betting_ai.utils.utils import moneyline_to_probability
+from nba_betting_ai.utils.utils import moneyline_data, moneyline_to_probability, nba_live_data
 
 # Set Streamlit page config for better visuals
 st.set_page_config(page_title="NBA Live Scores", page_icon="🏀", layout="wide")

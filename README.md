@@ -200,3 +200,7 @@ streamlit run APP.py
 ```
 
 Link to a historical NBA play-by-play games data 1990 - March 2022 [Data in Kaggle](https://www.kaggle.com/datasets/xocelyk/nba-pbp)
+
+
+# Data structure
+Databases are teams, games

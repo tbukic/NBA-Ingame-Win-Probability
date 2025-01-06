@@ -8,9 +8,12 @@ dependencies = [
     "attrs>=24.3.0",
     "bs4>=0.0.2",
     "nba_api>=1.6.1",
+    "psycopg2-binary>=2.9.10",
     "requests>=2.32.3",
     "sbrscrape>=0.0.10",
+    "sqlalchemy>=2.0.36",
     "streamlit>=1.41.1",
+    "tenacity>=9.0.0",
     "tqdm>=4.67.1",
 ]
 
