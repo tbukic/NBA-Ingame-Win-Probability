@@ -4,7 +4,7 @@
 	"service": "nba-betting-ai",
 	"workspaceFolder": "/workspaces/nba-betting-ai",
 	"privileged": true,
-	"postCreateCommand": "if [ -d \".venv\" ]; then rm -rf .venv; fi && uv sync",
+	"postCreateCommand": "if [ -d \".venv\" ]; then rm -rf .venv;fi && uv sync",
 	"customizations": {
 		"vscode": {
 			"settings": {

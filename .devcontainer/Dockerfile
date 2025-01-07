@@ -47,6 +47,9 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
         ca-certificates \
         openssh-client gnupg2 gnupg-agent \
         build-essential \
+        # Playwright: \
+        golang \
+        # Database: \
         postgresql-${POSTGRES_VERSION} postgresql-contrib-${POSTGRES_VERSION} \
         wget \
         git \
@@ -78,6 +81,8 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
     # user to docker group: \
     && usermod -aG docker ${USERNAME} \
+    # Playwright: \
+    && go run github.com/playwright-community/playwright-go/cmd/playwright@latest install chromium --with-deps \
     # Clean up
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt \
