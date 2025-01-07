@@ -109,7 +109,7 @@ def scrape_games_between(season: str | None, start_date: str | None, end_date: s
 
 
 # @retry(wait=_wait, stop=_stop, before=_before)
-def scrape_gameflow(game_id: str, timeout: int = 60, headers: str|None = None) -> pd.DataFrame:
+def scrape_gameflow(game_id: str, timeout: int = 60, headers: str | None = None) -> pd.DataFrame:
     """
     Scrape the game flow for a game from the NBA API.
 
@@ -171,19 +171,22 @@ def ingest_games(engine: Engine, season: str | None, start_date: str | None, end
     return games_df['game_id']
 
 
-def ingest_teams(engine: Engine = None, headers: dict|None=None) -> pd.Series:
+def ingest_teams(engine: Engine = None, headers: dict|None=None, force_scrape: bool = False) -> pd.Series:
     """
     Ingest teams from the NBA API.
 
     Params:
         engine (Engine): SQLAlchemy engine
         headers (dict): Headers for the API request
+        force_scrape (bool): If True, scrape teams even if they already exist in the database
 
     Returns:
         pd.Series: Series with the team IDs
     """
     table_exists = check_table_exists(engine, 'teams')
     teams_existing = load_teams(engine, just_ids=True) if table_exists else None
+    if teams_existing is not None and not force_scrape:
+        return teams_existing['team_id']
     teams_df = scrape_teams(headers=headers)
     if teams_existing is not None:
         teams_df = teams_df[~teams_df['id'].isin(teams_existing['team_id'])]
@@ -195,15 +198,16 @@ def ingest_teams(engine: Engine = None, headers: dict|None=None) -> pd.Series:
     logger.info(f'Ingested {len(teams_df)} new teams.')
     return teams_df['team_id']
 
-def ingest_gameflow(engine: Engine, game_id: str) -> None:
+def ingest_gameflow(engine: Engine, game_id: str, headers: str | None = None) -> None:
     """
     Ingest game flow from the NBA API.
 
     Params:
         engine (Engine): SQLAlchemy engine
         game_id (str): Game ID
+        headers (dict): Headers for the API request
     """
-    gameflow_df = scrape_gameflow(game_id)
+    gameflow_df = scrape_gameflow(game_id, headers=headers)
     gameflow_df.columns = gameflow_df.columns.str.lower()
     gameflow_df = gameflow_df[gameflow_cols]
     gameflow_df.to_sql('gameflow', engine, if_exists='append', index=False)
