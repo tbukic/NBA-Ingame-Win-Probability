@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 from sqlalchemy import Engine, inspect, text
 
+from nba_betting_ai.consts import proj_paths
+
 
 def check_table_exists(engine: Engine, table_name: str) -> bool:
     """
