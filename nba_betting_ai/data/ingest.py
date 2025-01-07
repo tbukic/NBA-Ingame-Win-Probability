@@ -3,14 +3,14 @@ import pandas as pd
 import random
 
 from datetime import datetime, timedelta
-from nba_api.stats.static.teams import get_teams
 from nba_api.stats.endpoints import playbyplayv2, leaguegamefinder
+from nba_api.stats.library.parameters import Season
+from nba_api.stats.static.teams import get_teams
 from sqlalchemy import Engine
-from tenacity import retry, wait_random_exponential, stop_after_attempt, before_log
+from tenacity import retry, wait_random_exponential, stop_after_attempt, before_log, retry_if_not_exception_type
 from time import sleep
 
 from nba_betting_ai.data.storage import check_table_exists, load_teams, load_games, get_uningested_games
-
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +67,11 @@ def format_season_id(season_id: str) -> str:
     next_year = int(year) + 1
     return f"{year}-{str(next_year)[-2:]}"
 
-_yesterday = (datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')
 
-@retry(wait=_wait, stop=_stop, before=_before)
-def scrape_games_between(season: str | None, start_date: str | None, end_date: str | None, timeout: int = 60, headers: dict | None = None) -> pd.DataFrame:
+_today = datetime.now().strftime('%m/%d/%Y')
+
+@retry(wait=_wait, stop=_stop, before=_before, retry=retry_if_not_exception_type(ValueError))
+def scrape_games_between(season: str | None = None, start_date: str | None = None, end_date: str | None = None, timeout: int = 60, headers: dict | None = None) -> pd.DataFrame:
     """
     Scrape games between two dates from the NBA API. If end_date is today, put it to yesterday so
     no unfinished games are included.
@@ -84,12 +85,12 @@ def scrape_games_between(season: str | None, start_date: str | None, end_date: s
     Returns:
         pd.DataFrame: DataFrame with games between the two dates
     """
+    if all([season is None, start_date is None, end_date is None]):
+        raise ValueError("At least one of season, start_date or end_date must be provided.")
     check_date_format(start_date)
     check_date_format(end_date)
-    # If end_date is today, put it to yesterday
-    today = datetime.now().strftime('%m/%d/%Y')
-    if end_date and end_date == today:
-        end_date = _yesterday
+    if end_date and end_date > _today:
+        end_date = _today
     gamefinder = leaguegamefinder.LeagueGameFinder(
         date_from_nullable=start_date,
         date_to_nullable=end_date,
@@ -160,6 +161,11 @@ def ingest_games(engine: Engine, season: str | None, start_date: str | None, end
     table_exists = check_table_exists(engine, 'games')
     games_existing = load_games(engine, season_id=season, just_ids=True) if table_exists else None
     games_df = scrape_games_between(season, start_date, end_date, headers=headers)
+    games_today = games_df[games_df['game_date'] == _today]
+    games_unfinished = games_today[games_today['wl'].isna()]
+    if not games_unfinished.empty:
+        logger.info(f'Found {len(games_unfinished)} unfinished games from today. Removing them.')
+        games_df = games_df[~games_df['game_id'].isin(games_unfinished['game_id'])]
     if games_existing is not None:
         games_df = games_df[~games_df['game_id'].isin(games_existing['game_id'])]
     games_df.columns = games_df.columns.str.lower()
@@ -224,7 +230,7 @@ def scrape_everything(
         engine: Engine,
         season: str | None = None,
         start_date: str | None = '10/22/2023',
-        end_date: str | None = _yesterday,
+        end_date: str | None = _today,
         headers: dict | None = None
     ) -> None:
     """
