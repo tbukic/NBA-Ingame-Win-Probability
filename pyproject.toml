@@ -8,6 +8,7 @@ dependencies = [
     "attrs>=24.3.0",
     "bs4>=0.0.2",
     "nba_api>=1.6.1",
+    "playwright>=1.49.1",
     "psycopg2-binary>=2.9.10",
     "requests>=2.32.3",
     "sbrscrape>=0.0.10",

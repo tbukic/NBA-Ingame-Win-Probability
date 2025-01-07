@@ -1,6 +1,9 @@
 import pandas as pd
+import subprocess
+
+from datetime import datetime
+from pathlib import Path
 from sqlalchemy import Engine, inspect, text
-from sqlalchemy.exc import SQLAlchemyError
 
 
 def check_table_exists(engine: Engine, table_name: str) -> bool:
@@ -120,3 +123,124 @@ def get_uningested_games(engine: Engine) -> pd.Series:
     
     unprocessed_games = pd.Series(list(existing_set - processed_set))
     return unprocessed_games
+
+def export_postgres_db(
+    db_name: str,
+    output_file: Path = None,
+    host: str = "localhost",
+    port: str = "5432",
+    username: str = "postgres",
+    schema: str = None,
+    password: str = None
+) -> Path:
+    """
+    Export a PostgreSQL database to a file.
+
+    Params:
+        db_name (str): Database name
+        output_file (Path): Output file path
+        host (str): Host name
+        port (str): Port number
+        username (str): Username
+        schema (str): Schema name
+        password (str): Password
+
+    Returns:
+        Path: Path to the output file
+    """
+    if not output_file:
+        date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_file = proj_paths.pg_dump / f"{db_name}_{date_str}.sql"
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        'pg_dump',
+        '-h', host,
+        '-p', port,
+        '-U', username,
+        '-F', 'c',
+        '-b',
+        '-v',
+        '-f', output_file.as_posix(),
+    ]
+    
+    # Add schema if specified
+    if schema:
+        cmd.extend(['-n', schema])
+    
+    cmd.append(db_name)
+    
+    # Set PostgreSQL password environment variable
+    env = {'PGPASSWORD': password}
+    
+    subprocess.run(cmd, env=env, check=True)
+    print(f"Database successfully exported to {output_file}")
+    return output_file
+
+def database_empty(engine: Engine,) -> bool:
+    """
+    Check if a database is empty.
+
+    Params:
+        engine (Engine): SQLAlchemy engine
+
+    Returns:
+        bool: True if the database is empty, False otherwise
+    """
+    with engine.connect() as conn:
+        query = text("""
+            SELECT EXISTS (
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'public'
+        )
+        """)
+        result = conn.execute(query)
+        is_empty = not result.scalar()
+    return is_empty
+
+def import_postgres_db(
+    engine: Engine,
+    backup_file: Path,
+    db_name: str,
+    host: str = "localhost",
+    port: str = "5432",
+    username: str = "postgres",
+    password: str = None,
+    nonempty_proceed: bool = False
+) -> None:
+    """
+    Import a PostgreSQL database from a file.
+
+    Params:
+        engine (Engine): SQLAlchemy engine
+        backup_file (Path): Backup file path
+        db_name (str): Database name
+        host (str): Host name
+        port (str): Port number
+        username (str): Username
+        password (str): Password
+        nonempty_proceed (bool): If True, proceed even if the database is not empty
+
+    Raises:
+        Exception: If the database already exists and is not empty
+    """
+    db_empty = database_empty(engine)
+    if not db_empty and not nonempty_proceed:
+        raise Exception(f"Database {db_name} already exists and is not empty")
+    
+    restore_cmd = [
+        'pg_restore',
+        '-h', host,
+        '-p', port,
+        '-U', username,
+        '-d', db_name,
+        '-v',
+        '--clean',
+        '--if-exists',
+        '-1',
+        backup_file.as_posix(),
+    ]
+    
+    env = {'PGPASSWORD': password}
+    subprocess.run(restore_cmd, env=env, check=True)
+    print(f"Database successfully restored from {backup_file}")
