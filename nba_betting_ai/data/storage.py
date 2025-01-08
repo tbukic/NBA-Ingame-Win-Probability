@@ -261,11 +261,11 @@ def delete_games(engine: Engine, game_id: str | list[str]) -> None:
     """
     with engine.connect() as conn:
         querries = (
-            "DELETE FROM games WHERE game_id = :game_id",
-            "DELETE FROM gameflow WHERE game_id = :game_id"
+            text("DELETE FROM games WHERE game_id = :game_id"),
+            text("DELETE FROM gameflow WHERE game_id = :game_id")
         ) if type(game_id) is str else (
-            "DELETE FROM games WHERE game_id = ANY(:game_id)",
-            "DELETE FROM gameflow WHERE game_id = ANY(:game_id)"
+            text("DELETE FROM games WHERE game_id = ANY(:game_id)"),
+            text("DELETE FROM gameflow WHERE game_id = ANY(:game_id)")
         )
         for query in querries:
             conn.execute(query, {'game_id': game_id})
