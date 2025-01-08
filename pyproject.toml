@@ -22,20 +22,18 @@ dependencies = [
 [tool.uv]
 dev-dependencies = [
     "ipykernel>=6.29",
-    "pre-commit>=4.0",
-    "nbdev>=2.3",
-    "poethepoet>=0.29",
-    "ruff>=0.6.2",
     "nbconvert>=7.16",
-    "pytest>=8.3"
+    "nbdev>=2.3",
+    "pre-commit>=4.0",
+    "poethepoet>=0.29",
+    "pytest>=8.3",
+    "ruff>=0.6.2",
+    "setuptools>=75.6.0"
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.poe.poetry_hooks]
-post_install = "post_install"
 
 [tool.poe.tasks]
 

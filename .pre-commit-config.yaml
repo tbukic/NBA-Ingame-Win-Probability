@@ -3,3 +3,4 @@ repos:
   rev: 2.3.13
   hooks:
   - id: nbdev_clean
+    additional_dependencies: [setuptools]
