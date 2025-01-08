@@ -1,10 +1,11 @@
 import logging
+import os
 import pandas as pd
 import subprocess
 
 from datetime import datetime
 from pathlib import Path
-from sqlalchemy import Engine, inspect, text
+from sqlalchemy import create_engine, Engine, inspect, text
 
 from nba_betting_ai.consts import proj_paths
 
@@ -271,3 +272,20 @@ def delete_games(engine: Engine, game_id: str | list[str]) -> None:
             conn.execute(query, {'game_id': game_id})
         logger.info(f"Deleted games with ID(s): {game_id}")
         conn.commit()
+
+def get_engine() -> Engine:
+    """
+    Create a SQLAlchemy engine for the PostgreSQL database.
+
+    Returns:
+        Engine: SQLAlchemy engine
+    """
+    postgres_user = os.environ.get('POSTGRES_USER')
+    postgres_password = os.environ.get('POSTGRES_PASSWORD')
+    postgres_host = os.environ.get('POSTGRES_HOST')
+    postgres_port = os.environ.get('POSTGRES_PORT')
+    postgres_db = os.environ.get('POSTGRES_DB')
+
+    postgres_conn = f'postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_db}'
+    engine = create_engine(postgres_conn)
+    return engine

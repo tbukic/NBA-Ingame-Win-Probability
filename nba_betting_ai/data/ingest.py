@@ -2,9 +2,8 @@ import logging
 import pandas as pd
 import random
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from nba_api.stats.endpoints import playbyplayv2, leaguegamefinder
-from nba_api.stats.library.parameters import Season
 from nba_api.stats.static.teams import get_teams
 from sqlalchemy import Engine
 from tenacity import retry, wait_random_exponential, stop_after_attempt, before_log, retry_if_not_exception_type
