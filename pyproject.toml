@@ -7,6 +7,7 @@ readme = "README.md"
 dependencies = [
     "attrs>=24.3.0",
     "bs4>=0.0.2",
+    "mlflow==2.19.0",
     "nba_api>=1.6.1",
     "playwright>=1.49.1",
     "psycopg2-binary>=2.9.10",

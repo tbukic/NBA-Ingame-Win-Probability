@@ -6,7 +6,7 @@ services:
       args:
         VARIANT: "ubuntu22.04"
         CUDA_VERSION: "12.4.1-cudnn"
-        # UBUNTU_VARIANT: "24.04"
+        # UBUNTU_VARIANT: "22.04"
         PYTHON_VERSION: "3.12"
         POSTGRES_VERSION: "16"
         GO_VERSION: "1.23.4"
@@ -23,6 +23,8 @@ services:
       POSTGRES_DB: 'nba_betting'
       POSTGRES_HOST: 'postgres'
       POSTGRES_PORT: '5432'
+      MLFLOW_TRACKING_URI: 'http://mlflow:5000'
+      MLFLOW_REGISTRY_URI: 'http://mlflow:5000'
     volumes:
       - ..:/workspaces/nba-betting-ai:cached
       - /var/run/docker.sock:/var/run/docker.sock
@@ -50,4 +52,15 @@ services:
       POSTGRES_PASSWORD: 'develop_password'
       POSTGRES_USER: 'develop'
       POSTGRES_DB: 'nba_betting'
+    restart: always
+
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.19.0
+    command: mlflow server --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+      - "9001:9001"
+    volumes:
+        - /data/mlflow/nba-betting-ai/mlruns:/mlruns
     restart: always
