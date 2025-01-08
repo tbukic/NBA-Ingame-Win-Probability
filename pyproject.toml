@@ -28,7 +28,6 @@ dev-dependencies = [
     "poethepoet>=0.29",
     "pytest>=8.3",
     "ruff>=0.6.2",
-    "setuptools>=75.6.0"
 ]
 
 [build-system]
