@@ -4,9 +4,12 @@ services:
       context: ..
       dockerfile: .devcontainer/Dockerfile
       args:
-        UBUNTU_VARIANT: "24.04"
+        VARIANT: "ubuntu22.04"
+        CUDA_VERSION: "12.4.1-cudnn"
+        # UBUNTU_VARIANT: "24.04"
         PYTHON_VERSION: "3.12"
         POSTGRES_VERSION: "16"
+        GO_VERSION: "1.23.4"
         USERNAME: ${USERNAME}
         USER_UID: "1000"
         USER_GID: "1000"
@@ -28,6 +31,14 @@ services:
       - /home/${USERNAME}/.cache:/home/${USERNAME}/.cache
     depends_on:
       - postgres
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
   
   postgres:
     image: postgres:16.6-bookworm

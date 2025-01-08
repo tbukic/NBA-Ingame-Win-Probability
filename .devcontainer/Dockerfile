@@ -1,9 +1,11 @@
-ARG UBUNTU_VARIANT="24.04" 
+ARG VARIANT="ubuntu22.04" 
+ARG CUDA_VERSION="12.6.2"
 ARG UV_VERSION="0.5.7"
 ARG USERNAME="user"
 ARG USER_UID="1000"
 ARG USER_GID=${USER_UID}
 ARG PYTHON_VERSION='3.10'
+ARG GO_VERSION='23.4'
 ARG POSTGRES_VERSION='16'
 ARG NODE_VERSION='v0.40.1'
 ARG NVM_VERSION='22.0.0'
@@ -11,16 +13,20 @@ ARG PROJECT_NAME='project'
 ARG PROJDIR
 
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv_image
+FROM golang:${GO_VERSION}-alpine AS go_image
 
 # Start from a CUDA development image
-# FROM nvidia/cuda:${CUDA_VERSION}-devel-${VARIANT} AS build-env
-FROM ubuntu:${UBUNTU_VARIANT} AS build-env
+FROM nvidia/cuda:${CUDA_VERSION}-devel-${VARIANT} AS build-env
+# FROM ubuntu:${UBUNTU_VARIANT} AS build-env
 COPY --from=uv_image /uv /uvx /bin/
-
+COPY --from=go_image /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
+ 
 ARG USERNAME
 ARG USER_UID
 ARG USER_GID
 ARG PYTHON_VERSION
+ARG GO_VERSION
 ARG POSTGRES_VERSION
 ARG NODE_VERSION
 ARG NVM_VERSION
@@ -44,18 +50,24 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
     ## Installing dependencies.
     && apt-get update -y \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
+        ca-certificates lsb-release \
         openssh-client gnupg2 gnupg-agent \
         build-essential \
         # Playwright: \
-        golang \
+        # golang \
         # Database: \
-        postgresql-${POSTGRES_VERSION} postgresql-contrib-${POSTGRES_VERSION} \
+        postgresql-common \
         wget \
         git \
         curl \
         # non-root user: \
         sudo \
+    # Postgres
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    && sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' \
+    && apt-get update -y \
+    && apt-get install -y postgresql-${POSTGRES_VERSION} postgresql-contrib-${POSTGRES_VERSION} \    
     # docker: \
     && install -m 0755 -d /etc/apt/keyrings \
     && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc \
@@ -81,6 +93,9 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
     && chmod 0440 /etc/sudoers.d/${USERNAME} \
     # user to docker group: \
     && usermod -aG docker ${USERNAME} \
+    # Go:
+    #&& go install golang.org/dl/go${GO_VERSION}@latest \
+    # && go${GO_VERSION} download \
     # Playwright: \
     && go run github.com/playwright-community/playwright-go/cmd/playwright@latest install chromium --with-deps \
     # Clean up
