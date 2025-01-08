@@ -68,12 +68,12 @@ def format_season_id(season_id: str) -> str:
     return f"{year}-{str(next_year)[-2:]}"
 
 
-_today = datetime.now().strftime('%m/%d/%Y')
+_yesterday = datetime.now().strftime('%m/%d/%Y')
 
 @retry(wait=_wait, stop=_stop, before=_before, retry=retry_if_not_exception_type(ValueError))
 def scrape_games_between(season: str | None = None, start_date: str | None = None, end_date: str | None = None, timeout: int = 60, headers: dict | None = None) -> pd.DataFrame:
     """
-    Scrape games between two dates from the NBA API. If end_date is today, put it to yesterday so
+    Scrape games between two dates from the NBA API. If end_date is today or later put it to yesterday so
     no unfinished games are included.
 
     Params:
@@ -89,8 +89,8 @@ def scrape_games_between(season: str | None = None, start_date: str | None = Non
         raise ValueError("At least one of season, start_date or end_date must be provided.")
     check_date_format(start_date)
     check_date_format(end_date)
-    if end_date and end_date > _today:
-        end_date = _today
+    if end_date and end_date > _yesterday:
+        end_date = _yesterday
     gamefinder = leaguegamefinder.LeagueGameFinder(
         date_from_nullable=start_date,
         date_to_nullable=end_date,
@@ -130,6 +130,8 @@ def scrape_gameflow(game_id: str, timeout: int = 60, headers: str | None = None)
     df_plays.columns = df_plays.columns.str.lower()
     scored_mask = ~df_plays['score'].isna()
     df_plays = df_plays[scored_mask]
+    if df_plays.empty:
+        return df_plays
     scores = df_plays['score'].str.split(' - ', expand=True)
     scores.columns = ['home_score', 'away_score']
     scores = scores.astype(int)
@@ -161,8 +163,8 @@ def ingest_games(engine: Engine, season: str | None, start_date: str | None, end
     table_exists = check_table_exists(engine, 'games')
     games_existing = load_games(engine, season_id=season, just_ids=True) if table_exists else None
     games_df = scrape_games_between(season, start_date, end_date, headers=headers)
-    games_today = games_df[games_df['game_date'] == _today]
-    games_unfinished = games_today[games_today['wl'].isna()]
+    games_too_recent = games_df[games_df['game_date'] >= _yesterday]
+    games_unfinished = games_too_recent[games_too_recent['wl'].isna()]
     if not games_unfinished.empty:
         logger.info(f'Found {len(games_unfinished)} unfinished games from today. Removing them.')
         games_df = games_df[~games_df['game_id'].isin(games_unfinished['game_id'])]
@@ -214,6 +216,9 @@ def ingest_gameflow(engine: Engine, game_id: str, headers: str | None = None) ->
         headers (dict): Headers for the API request
     """
     gameflow_df = scrape_gameflow(game_id, headers=headers)
+    if gameflow_df.empty:
+        logger.info(f'No gameflow found for game {game_id}.')
+        return
     gameflow_df.columns = gameflow_df.columns.str.lower()
     gameflow_df = gameflow_df[gameflow_cols]
     gameflow_df.to_sql('gameflow', engine, if_exists='append', index=False)
@@ -230,7 +235,7 @@ def scrape_everything(
         engine: Engine,
         season: str | None = None,
         start_date: str | None = '10/22/2023',
-        end_date: str | None = _today,
+        end_date: str | None = _yesterday,
         headers: dict | None = None
     ) -> None:
     """
