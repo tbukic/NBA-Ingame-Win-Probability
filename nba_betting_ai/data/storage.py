@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import subprocess
 
@@ -7,6 +8,8 @@ from sqlalchemy import Engine, inspect, text
 
 from nba_betting_ai.consts import proj_paths
 
+
+logger = logging.getLogger(__name__)
 
 def check_table_exists(engine: Engine, table_name: str) -> bool:
     """
@@ -176,7 +179,7 @@ def export_postgres_db(
     env = {'PGPASSWORD': password}
     
     subprocess.run(cmd, env=env, check=True)
-    print(f"Database successfully exported to {output_file}")
+    logger.info(f"Database successfully exported to {output_file}")
     return output_file
 
 def database_empty(engine: Engine,) -> bool:
@@ -245,4 +248,26 @@ def import_postgres_db(
     
     env = {'PGPASSWORD': password}
     subprocess.run(restore_cmd, env=env, check=True)
-    print(f"Database successfully restored from {backup_file}")
+    logger.info(f"Database successfully restored from {backup_file}")
+
+
+def delete_games(engine: Engine, game_id: str | list[str]) -> None:
+    """
+    Delete games from the database.
+    
+    Params:
+        engine (Engine): SQLAlchemy engine
+        game_id (str | list[str]): Game ID(s) to delete
+    """
+    with engine.connect() as conn:
+        querries = (
+            "DELETE FROM games WHERE game_id = :game_id",
+            "DELETE FROM gameflow WHERE game_id = :game_id"
+        ) if type(game_id) is str else (
+            "DELETE FROM games WHERE game_id = ANY(:game_id)",
+            "DELETE FROM gameflow WHERE game_id = ANY(:game_id)"
+        )
+        for query in querries:
+            conn.execute(query, {'game_id': game_id})
+        logger.info(f"Deleted games with ID(s): {game_id}")
+        conn.commit()
