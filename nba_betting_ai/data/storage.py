@@ -74,7 +74,7 @@ def load_games(engine: Engine, season_id: str | None = None, just_ids: bool = Fa
     return df_games if not df_games.empty else None
 
 
-def load_gameflow(engine: Engine, game_id: str | list[str], only_ids: bool=False) -> pd.DataFrame | None:
+def load_gameflow(engine: Engine, game_id: str | list[str] | None = None, only_ids: bool=False) -> pd.DataFrame | None:
     """
     Load the game flow for a game from the database.
 
@@ -96,6 +96,9 @@ def load_gameflow(engine: Engine, game_id: str | list[str], only_ids: bool=False
     elif isinstance(game_id, list):
         query_condition = " WHERE game_id IN :game_id"
         params = {"game_id": tuple(game_id)}
+    elif game_id is None:
+        query_condition = ""
+        params = {}
     else:
         raise ValueError(f"Unsupported game_id type: {type(game_id)}")
     query_text += query_condition
