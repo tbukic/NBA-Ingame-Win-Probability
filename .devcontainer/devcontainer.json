@@ -9,7 +9,7 @@
 		"vscode": {
 			"settings": {
                 "terminal.integrated.defaultProfile.linux": "bash",
-				"python.defaultInterpreterPath": "/workspaces/${localWorkspaceFolderBasename}/.venv/bin/python"
+				"python.defaultInterpreterPath": "/workspaces/nba-betting-ai/.venv/bin/python"
 			},
             "profiles": {
                 "bash": {

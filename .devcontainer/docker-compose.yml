@@ -10,7 +10,7 @@ services:
         PYTHON_VERSION: "3.12"
         POSTGRES_VERSION: "16"
         GO_VERSION: "1.23.4"
-        USERNAME: ${USERNAME}
+        USERNAME: accelerate
         USER_UID: "1000"
         USER_GID: "1000"
         UV_VERSION: "0.5.7"
@@ -28,9 +28,9 @@ services:
     volumes:
       - ..:/workspaces/nba-betting-ai:cached
       - /var/run/docker.sock:/var/run/docker.sock
-      - /home/${USERNAME}/.docker:/home/${USERNAME}/.docker
-      - /home/${USERNAME}/.bash_history:/home/${USERNAME}/.bash_history
-      - /home/${USERNAME}/.cache:/home/${USERNAME}/.cache
+      - /home/${USERNAME}/.docker:/home/accelerate/.docker
+      - /home/${USERNAME}/.bash_history:/home/accelerate/.bash_history
+      - /home/${USERNAME}/.cache:/home/accelerate/.cache
     depends_on:
       - postgres
     deploy:
