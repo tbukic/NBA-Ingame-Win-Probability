@@ -21,7 +21,8 @@
                 "ms-python.python",
 				"ms-toolsai.jupyter",
 				"ms-toolsai.vscode-jupyter-powertoys",
-				"eamodio.gitlens"
+				"eamodio.gitlens",
+				"mechatroner.rainbow-csv"
 			]
 		}
 	}
