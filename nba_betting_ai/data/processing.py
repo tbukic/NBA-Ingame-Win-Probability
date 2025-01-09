@@ -2,24 +2,6 @@ import numpy as np
 import pandas as pd
 
 
-def format_games_df(games_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Format the games DataFrame.
-    
-    Params:
-        games_df (pd.DataFrame): DataFrame with games
-
-    Returns:
-        pd.DataFrame: Formatted DataFrame
-    """
-    games_df = games_df.copy()
-    games_df['result'] = games_df['wl'].map({'W': 1, 'L': 0})
-    columns = ['season_id', 'game_id', 'game_date', 'result']
-    teams = games_df['matchup'].str.split(expand=True)[[0, 2]].rename(columns={0: 'home_team', 2: 'away_team'})
-    games_df = pd.concat([games_df[columns], teams], axis=1)
-    return games_df
-
-
 def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.DataFrame:
     """
     Merges the game data with results and team form.
@@ -143,7 +125,7 @@ def merge_game_data(index_gameflow: list[int], df_games: pd.DataFrame, df_gamefl
     """
     game_event_ids = df_gameflow.loc[index_gameflow]['game_id']
     outcomes = df_gameflow[df_gameflow['game_id'].isin(game_event_ids)].groupby('game_id').tail(1)
-    outcomes['win'] = (outcomes['home_score'] > outcomes['away_score']).astype(int)
+    outcomes['win'] = (outcomes['away_score'] > outcomes['home_score']).astype(int)
     df_games_filtered = df_games[df_games['game_id'].isin(outcomes['game_id'])].drop(columns=['season_id'])
     games_home_tmp = df_games_filtered[cols_base + cols_team].rename(columns=add_prefix(cols_team, 'home'))
     games_away_tmp = df_games_filtered[cols_base + cols_team].rename(columns=add_prefix(cols_team, 'away'))

@@ -129,7 +129,7 @@ def scrape_gameflow(game_id: str, timeout: int = 60, headers: str | None = None)
     if df_plays.empty:
         return df_plays
     scores = df_plays['score'].str.split(' - ', expand=True)
-    scores.columns = ['home_score', 'away_score']
+    scores.columns = ['away_score', 'home_score']
     scores = scores.astype(int)
     scores.insert(0, 'game_id', game_id)
     period_length = 12 * 60
