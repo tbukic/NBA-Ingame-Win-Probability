@@ -100,7 +100,14 @@ def load_gameflow(engine: Engine, game_id: str | list[str], only_ids: bool=False
         raise ValueError(f"Unsupported game_id type: {type(game_id)}")
     query_text += query_condition
     df_gameflow = pd.read_sql(text(query_text), engine, params=params)
-    return df_gameflow if not df_gameflow.empty else None
+    if df_gameflow.empty:
+        return None
+    df_gameflow = df_gameflow.drop_duplicates().reset_index(drop=True)
+    df_gameflow = df_gameflow.sort_values(
+        by=['game_id', 'time_remaining', 'home_score', 'away_score'],
+        ascending=[True, False, True, True]
+    )
+    return df_gameflow
 
 def get_uningested_games(engine: Engine) -> pd.Series:
     """
@@ -250,7 +257,6 @@ def import_postgres_db(
     env = {'PGPASSWORD': password}
     subprocess.run(restore_cmd, env=env, check=True)
     logger.info(f"Database successfully restored from {backup_file}")
-
 
 def delete_games(engine: Engine, game_id: str | list[str]) -> None:
     """
