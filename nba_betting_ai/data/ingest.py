@@ -90,21 +90,18 @@ def scrape_games_between(season: str | None = None, start_date: str | None = Non
     check_date_format(end_date)
     if end_date and end_date > _yesterday:
         end_date = _yesterday
-    gamefinder = leaguegamefinder.LeagueGameFinder(
+    nba_adult_man = '00'
+    games_df = leaguegamefinder.LeagueGameFinder(
         date_from_nullable=start_date,
         date_to_nullable=end_date,
         season_nullable=season,
         team_id_nullable=None,
-        league_id_nullable='00',  # NBA games only
+        league_id_nullable=nba_adult_man,
         timeout=timeout,
         headers=headers
-    )
-    games_dict = gamefinder.get_normalized_dict()
-    games_df = pd.DataFrame(games_dict['LeagueGameFinderResults'])
+    ).get_data_frames()[0]
     games_df.columns = games_df.columns.str.lower()
     games_df['season_id'] = games_df['season_id'].apply(format_season_id)
-    #raw_cols = ['SEASON_ID', 'GAME_ID', 'GAME_DATE', 'MATCHUP', 'WL']
-    #games_df = games_df[raw_cols]
     return games_df
 
 
@@ -135,7 +132,6 @@ def scrape_gameflow(game_id: str, timeout: int = 60, headers: str | None = None)
     scores.columns = ['home_score', 'away_score']
     scores = scores.astype(int)
     scores.insert(0, 'game_id', game_id)
-    # scores['DIFF'] = scores['HOME_SCORE'] - scores['AWAY_SCORE']
     period_length = 12 * 60
     total_periods = df_plays['period'].max()
     time_remaining_period = df_plays['pctimestring'].str.split(':', expand=True).astype(int)
