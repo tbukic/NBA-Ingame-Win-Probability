@@ -132,5 +132,12 @@ def merge_game_data(index_gameflow: list[int], df_games: pd.DataFrame, df_gamefl
     games_away_tmp['win'] = 1 - games_away_tmp['win']
     result = pd.merge(games_home_tmp, outcomes, left_on=['game_id', 'win'], right_on=['game_id', 'win'])
     result = pd.merge(result, games_away_tmp, left_on=['game_id', 'win'], right_on=['game_id', 'win'])
-    result.drop(columns=['home_score', 'away_score', 'time_remaining'], inplace=True)
+    result = (
+        result.drop(columns=['time_remaining'])
+        .rename(columns={
+            'home_score': 'home_score_final',
+            'away_score': 'away_score_final',
+            'win': 'away_win'
+        })
+    )
     return result
