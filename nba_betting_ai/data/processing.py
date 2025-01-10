@@ -72,21 +72,31 @@ def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.D
         
     return df_games.reset_index(drop=True)
 
-def add_prefix(to_list: list[str], prefix: str) -> dict[str, str]:
+def add_prefix(to_list: list[str], prefix: str, return_type: str = 'dict') -> dict[str, str]:
     """
     Add a prefix to each element in the list.
 
     Params:
         to_list (list[str]): List of elements
         prefix (str): Prefix
+        return_type (str): Type of the return value. Either 'dict' or 'list'
 
     Returns:
         dict[str, str]: Dictionary with the elements and the prefix
+
+    Raises:
+        ValueError: If return_type is not 'dict' or 'list'
     """
-    return {
-        elem: f'{prefix}_{elem}'
+    with_prefix = [
+        f'{prefix}_{elem}'
         for elem in to_list
-    }
+    ]
+    if return_type == 'dict':
+        return dict(zip(to_list, with_prefix))
+    if return_type == 'list':
+        return with_prefix
+    raise ValueError('return_type must be either "dict" or "list"')
+
 
 cols_team = [
     'team_id',
