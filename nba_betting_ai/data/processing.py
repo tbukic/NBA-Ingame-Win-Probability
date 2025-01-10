@@ -2,6 +2,83 @@ import numpy as np
 import pandas as pd
 
 
+def fill_na_with_last_season(df_games: pd.DataFrame, filling_in_principle: dict[str, str]) -> pd.DataFrame:
+    """
+    Fill missing values in the games data with the last season's data. Last datapoint from the last season is used
+    to fill in the missing values. If the last season's data is missing, the missing values are filled in with 0.
+
+    Params:
+        df_games (pd.DataFrame): DataFrame with games
+        filling_in_principle (dict[str, str]): Dictionary with the columns to fill in and the filling in principle
+    
+    Returns:
+        pd.DataFrame: DataFrame with filled in missing values
+    """
+
+    df_last_season = (
+        df_games
+        .groupby(['team_id', 'season_id'], as_index=False)
+        .agg(filling_in_principle)
+    )
+
+    df_last_season = df_last_season.sort_values(['team_id', 'season_id'])
+
+    filled_in_keys = list(filling_in_principle.keys())
+    temporary_keys = add_prefix(filled_in_keys, 'tmp_prev', return_type='list')
+
+    df_last_season[temporary_keys] = (
+        df_last_season
+        .groupby('team_id')[filled_in_keys]
+        .shift(1)
+    )
+
+    df_games = df_games.merge(
+        df_last_season.drop(columns=filled_in_keys),
+        on=['team_id', 'season_id'],
+        how='left'
+    )
+
+    for original_key, temporary_key in zip(filled_in_keys, temporary_keys):
+        df_games[original_key] = (
+            df_games[original_key]
+            .fillna(df_games[temporary_key])
+            .fillna(0)
+        )
+    df_games = df_games.drop(columns=temporary_keys)
+    return df_games
+
+
+def fill_na(df_games: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fill missing values in the games data. A part of the data is filled in with the last season's data,
+    and the rest is filled in with 0.
+
+    Params:
+        df_games (pd.DataFrame): DataFrame with games
+
+    Returns:
+        pd.DataFrame: DataFrame with filled in missing values
+    """
+    filling_in_principle = {
+        'season_wins': 'last',
+        'last_5_wins': 'last',
+        'last_5_pts_for_avg' :'last',
+        'last_5_pts_for_total': 'last',
+        'last_5_pts_against_avg': 'last',
+        'last_5_pts_against_total': 'last',
+        'season_pts_for_avg': 'last',
+        'season_wins_avg': 'last',
+        'season_pts_against_avg': 'last',
+    }
+    df_games = fill_na_with_last_season(df_games, filling_in_principle)
+    fill_w_zeros = ['season_pts_for', 'season_pts_against']
+    df_games[fill_w_zeros] = (
+        df_games[fill_w_zeros]
+        .fillna(0)
+    )
+    return df_games
+
+
 def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.DataFrame:
     """
     Merges the game data with results and team form.
@@ -50,7 +127,7 @@ def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.D
         .groupby(['team_id', 'season_id'], dropna=False)[['win', 'points_for', 'points_against']]
         .shift(1)
     )
-    df_games[['season_wins','season_pts_for','season_pts_against_so_far']] = (
+    df_games[['season_wins','season_pts_for','season_pts_against']] = (
         df_games
         .groupby(['team_id','season_id'])[['lag_win','lag_points_for','lag_points_against']]
         .cumsum()
@@ -69,7 +146,13 @@ def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.D
         left_index=True,
         right_index=True,
     ).drop(columns=['team_id_y']).rename(columns={'team_id_x': 'team_id'}).sort_values(['game_date'])
-        
+    
+    df_games['season_wins_avg'] = df_games['season_wins'] / df_games['season_games']
+    df_games['season_pts_for_avg'] = df_games['season_pts_for'] / df_games['season_games']
+    df_games['season_pts_against_avg'] = df_games['season_pts_against'] / df_games['season_games']
+    
+    df_games = fill_na(df_games)
+
     return df_games.reset_index(drop=True)
 
 def add_prefix(to_list: list[str], prefix: str, return_type: str = 'dict') -> dict[str, str]:
@@ -97,19 +180,21 @@ def add_prefix(to_list: list[str], prefix: str, return_type: str = 'dict') -> di
         return with_prefix
     raise ValueError('return_type must be either "dict" or "list"')
 
-
 cols_team = [
     'team_id',
     'team_abbreviation',
     'season_wins',
     'season_pts_for',
-    'season_pts_against_so_far',
+    'season_pts_against',
     'season_games',
+    'season_wins_avg',
+    'season_pts_for_avg',
+    'season_pts_against_avg',
     'last_5_wins',
     'last_5_pts_for_avg',
     'last_5_pts_for_total',
     'last_5_pts_against_avg',
-    'last_5_pts_against_total'
+    'last_5_pts_against_total',
 ]
 """
 A list of columns related to each teams statistics.
