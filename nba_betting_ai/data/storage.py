@@ -29,7 +29,8 @@ def check_table_exists(engine: Engine, table_name: str) -> bool:
 
 def load_teams(engine: Engine, just_ids: bool = False) -> pd.DataFrame | None:
     """
-    Load teams from the database.
+    Load teams from the database. Index is set up to be growing from 0 to the number of teams,
+    tracking the growth of the team IDs.
 
     Params:
         engine (Engine): SQLAlchemy engine
@@ -44,6 +45,8 @@ def load_teams(engine: Engine, just_ids: bool = False) -> pd.DataFrame | None:
     """
     querry = text("SELECT * FROM teams") if not just_ids else text("SELECT team_id FROM teams")
     df_teams = pd.read_sql(querry, engine)
+    index = df_teams.team_id - df_teams['team_id'].astype('int32').min()
+    df_teams = df_teams.set_index(index)
     return df_teams if not df_teams.empty else None
 
 
@@ -106,10 +109,11 @@ def load_gameflow(engine: Engine, game_id: str | list[str] | None = None, only_i
     if df_gameflow.empty:
         return None
     df_gameflow = df_gameflow.drop_duplicates().reset_index(drop=True)
-    df_gameflow = df_gameflow.sort_values(
-        by=['game_id', 'time_remaining', 'home_score', 'away_score'],
-        ascending=[True, False, True, True]
-    )
+    if not only_ids:
+        df_gameflow = df_gameflow.sort_values(
+            by=['game_id', 'time_remaining', 'home_score', 'away_score'],
+            ascending=[True, False, True, True]
+        )
     return df_gameflow
 
 def get_uningested_games(engine: Engine) -> pd.Series:
