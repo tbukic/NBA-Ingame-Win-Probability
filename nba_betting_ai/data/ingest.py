@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import pandas as pd
 import random
 
@@ -132,11 +133,17 @@ def scrape_gameflow(game_id: str, timeout: int = 60, headers: str | None = None)
     scores.columns = ['away_score', 'home_score']
     scores = scores.astype(int)
     scores.insert(0, 'game_id', game_id)
-    period_length = 12 * 60
+    period_regular_length = 12 * 60
+    period_extra_length = 5 * 60 
     total_periods = df_plays['period'].max()
     time_remaining_period = df_plays['pctimestring'].str.split(':', expand=True).astype(int)
     time_remaining_period = time_remaining_period[0] * 60 + time_remaining_period[1]
-    time_remaining = (total_periods - df_plays['period']) * period_length + time_remaining_period
+    periods_remaining = total_periods - df_plays['period']
+    remaining_regular_periods = np.minimum(periods_remaining, np.maximum(4 - df_plays['period'], 0))
+    remaining_extra_periods = periods_remaining - remaining_regular_periods
+    time_remaining = remaining_regular_periods * period_regular_length + \
+                    remaining_extra_periods * period_extra_length + \
+                    time_remaining_period
     scores['time_remaining'] = time_remaining
     return scores
 
