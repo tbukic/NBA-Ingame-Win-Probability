@@ -199,7 +199,7 @@ cols_team = [
 """
 A list of columns related to each teams statistics.
 """
-cols_base = ['game_id', 'win']
+cols_base = ['game_id', 'win', 'game_date',]
 """
 A list of columns that is specific to the game, and not to the teams.
 """
@@ -228,7 +228,7 @@ def merge_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.Dat
     games_away_tmp = df_games_filtered[cols_base + cols_team].rename(columns=add_prefix(cols_team, 'away'))
     games_away_tmp['win'] = 1 - games_away_tmp['win']
     result = pd.merge(games_home_tmp, outcomes, left_on=['game_id', 'win'], right_on=['game_id', 'win'])
-    result = pd.merge(result, games_away_tmp, left_on=['game_id', 'win'], right_on=['game_id', 'win'])
+    result = pd.merge(result, games_away_tmp.drop(columns='game_date'), left_on=['game_id', 'win'], right_on=['game_id', 'win'])
     result = (
         result.drop(columns=['time_remaining'])
         .rename(columns={
