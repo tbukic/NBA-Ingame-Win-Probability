@@ -46,6 +46,7 @@ def load_teams(engine: Engine, just_ids: bool = False) -> pd.DataFrame | None:
     querry = text("SELECT * FROM teams") if not just_ids else text("SELECT team_id FROM teams")
     df_teams = pd.read_sql(querry, engine)
     index = df_teams.team_id - df_teams['team_id'].astype('int32').min()
+    index.name = 'team_no'
     df_teams = df_teams.set_index(index)
     return df_teams if not df_teams.empty else None
 

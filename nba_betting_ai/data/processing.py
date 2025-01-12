@@ -204,22 +204,24 @@ cols_base = ['game_id', 'win']
 A list of columns that is specific to the game, and not to the teams.
 """
 
-def merge_game_data(index_gameflow: list[int], df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.DataFrame:
+def merge_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.DataFrame:
     """
-    Creates a DataFrame in which each row contains the game data for a specific game for both teams. It receives a list
-    of indices for a game flow DataFrame containing result changes for each game. It also receives a data frame with the
+    Creates a DataFrame in which each row contains the game data for a specific game for both teams. It receives a
+    game flow DataFrame containing result changes for each game. It also receives a data frame with the
     game data where each row represents one team's view of the game.
 
     Params:
-        index_gameflow (list[int]): List of indices
         df_games (pd.DataFrame): DataFrame with game data
         df_gameflow (pd.DataFrame): DataFrame with game flow data containing the result changes
 
     Returns:
         pd.DataFrame: DataFrame with game data merged for both teams
     """
-    game_event_ids = df_gameflow.loc[index_gameflow]['game_id']
-    outcomes = df_gameflow[df_gameflow['game_id'].isin(game_event_ids)].groupby('game_id').tail(1)
+    outcomes = (
+        df_gameflow
+            .sort_values(by=['game_id', 'time_remaining'])
+            .groupby('game_id').head(1)
+    )
     outcomes['win'] = (outcomes['away_score'] > outcomes['home_score']).astype(int)
     df_games_filtered = df_games[df_games['game_id'].isin(outcomes['game_id'])].drop(columns=['season_id'])
     games_home_tmp = df_games_filtered[cols_base + cols_team].rename(columns=add_prefix(cols_team, 'home'))
