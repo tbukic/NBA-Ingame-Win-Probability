@@ -112,8 +112,8 @@ def load_gameflow(engine: Engine, game_id: str | list[str] | None = None, only_i
     df_gameflow = df_gameflow.drop_duplicates().reset_index(drop=True)
     if not only_ids:
         df_gameflow = df_gameflow.sort_values(
-            by=['game_id', 'time_remaining', 'home_score', 'away_score'],
-            ascending=[True, False, True, True]
+            by=['game_id', 'period', 'period_time_remaining', 'home_score', 'away_score'],
+            ascending=[True, True, False, True, True]
         )
     return df_gameflow
 

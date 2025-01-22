@@ -15,7 +15,7 @@ from nba_betting_ai.data.storage import check_table_exists, load_teams, load_gam
 logger = logging.getLogger(__name__)
 
 games_cols = ['season_id', 'team_id', 'team_abbreviation', 'team_name', 'game_id', 'game_date', 'matchup', 'wl']
-gameflow_cols = ['game_id', 'home_score', 'away_score', 'time_remaining']
+gameflow_cols = ['game_id', 'home_score', 'away_score', 'period', 'period_time_remaining']
 
 _wait=wait_random_exponential(multiplier=1, max=60)
 _stop=stop_after_attempt(15)
@@ -23,14 +23,14 @@ _before = before_log(logger=logger, log_level=logging.DEBUG)
 
 
 @retry(wait=_wait, stop=_stop, before=_before)
-def scrape_teams(headers: dict | None = None) -> pd.DataFrame:
+def scrape_teams() -> pd.DataFrame:
     """
     Scrape teams from the NBA API.
 
     Returns:
         pd.DataFrame: DataFrame with teams
     """
-    teams = get_teams(headers=headers)
+    teams = get_teams()
     teams_df = pd.DataFrame(teams)
     return teams_df
 
@@ -133,18 +133,13 @@ def scrape_gameflow(game_id: str, timeout: int = 60, headers: str | None = None)
     scores.columns = ['away_score', 'home_score']
     scores = scores.astype(int)
     scores.insert(0, 'game_id', game_id)
-    period_regular_length = 12 * 60
-    period_extra_length = 5 * 60 
-    total_periods = df_plays['period'].max()
-    time_remaining_period = df_plays['pctimestring'].str.split(':', expand=True).astype(int)
-    time_remaining_period = time_remaining_period[0] * 60 + time_remaining_period[1]
-    periods_remaining = total_periods - df_plays['period']
-    remaining_regular_periods = np.minimum(periods_remaining, np.maximum(4 - df_plays['period'], 0))
-    remaining_extra_periods = periods_remaining - remaining_regular_periods
-    time_remaining = remaining_regular_periods * period_regular_length + \
-                    remaining_extra_periods * period_extra_length + \
-                    time_remaining_period
-    scores['time_remaining'] = time_remaining
+    period_time_remaining = 12 * 60
+    period_time_remaining = 5 * 60 
+    period_time_remaining = df_plays['period'].max()
+    period_time_remaining = df_plays['pctimestring'].str.split(':', expand=True).astype(int)
+    period_time_remaining = period_time_remaining[0] * 60 + period_time_remaining[1]
+    scores['period_time_remaining'] = period_time_remaining
+    scores['period'] = df_plays['period']
     return scores
 
 
@@ -197,7 +192,7 @@ def ingest_teams(engine: Engine = None, headers: dict|None=None, force_scrape: b
     teams_existing = load_teams(engine, just_ids=True) if table_exists else None
     if teams_existing is not None and not force_scrape:
         return teams_existing['team_id']
-    teams_df = scrape_teams(headers=headers)
+    teams_df = scrape_teams()
     if teams_existing is not None:
         teams_df = teams_df[~teams_df['id'].isin(teams_existing['team_id'])]
     teams_df.columns = teams_df.columns.str.lower()
