@@ -79,18 +79,34 @@ def fill_na(df_games: pd.DataFrame) -> pd.DataFrame:
     return df_games
 
 
-def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.DataFrame:
+def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame, groups: str='game') -> pd.DataFrame:
     """
     Merges the game data with results and team form.
 
     Params:
         df_games (pd.DataFrame): DataFrame with games
         df_gameflow (pd.DataFrame): DataFrame with game flow data
+        groups (str): Unit for which the results will be reported. Either 'period' or a 'game'.
 
     Returns:
         pd.DataFrame: DataFrame with game data
     """
-    df_results = df_gameflow[df_gameflow['game_id'].isin(df_gameflow['game_id'].unique())].groupby('game_id').tail(1).drop(columns=['time_remaining'])
+    if not groups in ['period', 'game']:
+        raise ValueError('Values for  must be either "period" or "game"')
+    grouping_columns = ['game_id'] if groups == 'game' else ['game_id', 'period']
+    drop_columns = ['period', 'period_time_remaining']  if groups == 'game' else ['period_time_remaining']
+    df_results = (
+            df_gameflow[df_gameflow['game_id'].isin(df_games['game_id'].unique())]
+            .sort_values(
+                by=['period', 'period_time_remaining'],
+                ascending=[True, False]
+            )
+            .groupby(grouping_columns)
+            .tail(1)
+            .drop(
+                columns=drop_columns
+            )
+    )
     df_games = pd.merge(df_games, df_results, left_on='game_id', right_on='game_id')
     df_games['game_date'] = pd.to_datetime(df_games['game_date'])
             
@@ -213,14 +229,18 @@ def merge_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.Dat
     Params:
         df_games (pd.DataFrame): DataFrame with game data
         df_gameflow (pd.DataFrame): DataFrame with game flow data containing the result changes
+        outcome_level (str): Level of the outcome to be modeled. Either 'game' or 'period'
 
     Returns:
         pd.DataFrame: DataFrame with game data merged for both teams
     """
     outcomes = (
         df_gameflow
-            .sort_values(by=['game_id', 'time_remaining'])
-            .groupby('game_id').head(1)
+            .sort_values(
+                by=['game_id', 'period', 'period_time_remaining', 'home_score', 'away_score'],
+                ascending=[True, True, False, True, True]
+            )
+            .groupby('game_id').tail(1)
     )
     outcomes['win'] = (outcomes['away_score'] > outcomes['home_score']).astype(int)
     df_games_filtered = df_games[df_games['game_id'].isin(outcomes['game_id'])].drop(columns=['season_id'])
@@ -230,7 +250,7 @@ def merge_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame) -> pd.Dat
     result = pd.merge(games_home_tmp, outcomes, left_on=['game_id', 'win'], right_on=['game_id', 'win'])
     result = pd.merge(result, games_away_tmp.drop(columns='game_date'), left_on=['game_id', 'win'], right_on=['game_id', 'win'])
     result = (
-        result.drop(columns=['time_remaining'])
+        result.drop(columns=['period', 'period_time_remaining'])
         .rename(columns={
             'home_score': 'home_score_final',
             'away_score': 'away_score_final',

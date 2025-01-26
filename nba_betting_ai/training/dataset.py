@@ -2,26 +2,28 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
+from nba_betting_ai.model.inputs import scale_data, Scalers
 
 class NBADataset(Dataset):
-    def __init__(self, feature_cols: list[str], target_cols: list[str], X: pd.DataFrame, df_teams: pd.DataFrame):
+    def __init__(self, team_features: list[str], target_cols: list[str], X: pd.DataFrame, df_teams: pd.DataFrame, scalers: Scalers):
         """
         NBADataset is a PyTorch Dataset wrapper around dataframes containing NBA data. It is created from the
         list of feature columns, target columns, the input data dataframe X, and the dataframe containing team lists.
 
         Args:
-            - feature cols (list[str]): List of feature columns
+            - team_features (list[str]): List of feature columns
             - target_cols (list[str]): List of target columns
             - X (pd.DataFrame): Input data
             - df_teams (pd.DataFrame): DataFrame with NBA teams
         """
+        X = scale_data(X, scalers, team_features)
         home_team_cols = [
-            col for col in feature_cols
+            col for col in team_features
             if col.startswith('home_season') or col.startswith('home_last_5')
         ]
         self.home_data = X[home_team_cols]
         away_team_cols = [
-            col for col in feature_cols
+            col for col in team_features
             if col.startswith('away_season') or col.startswith('away_last_5')
         ]
         self.away_data = X[away_team_cols]

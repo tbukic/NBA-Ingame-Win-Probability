@@ -78,7 +78,7 @@ def augument_dataset(df: pd.DataFrame) -> pd.DataFrame:
     df = insert_diff(df,
         difference_cols=['score_diff', 'final_score_diff', 'home_season_pts_diff_avg', 'away_season_pts_diff_avg', 'home_last_5_pts_diff_avg', 'away_last_5_pts_diff_avg'],
         minuend_cols=['away_score', 'away_score_final', 'home_season_pts_for_avg', 'away_season_pts_for_avg', 'home_last_5_pts_for_avg', 'away_last_5_pts_for_avg'],
-        subtrahend_cols=['home_score', 'home_score_final', 'home_season_pts_for_avg', 'away_season_pts_for_avg', 'home_last_5_pts_for_avg', 'away_last_5_pts_for_avg']
+        subtrahend_cols=['home_score', 'home_score_final', 'home_season_pts_against_avg', 'away_season_pts_against_avg', 'home_last_5_pts_against_avg', 'away_last_5_pts_against_avg']
     )
     return df
 
@@ -88,6 +88,24 @@ class DataSet:
     X_train: pd.DataFrame
     X_test: pd.DataFrame
     data_summary: pd.DataFrame
+
+
+def prepare_time(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Replace the period and period time remaining columns with a single column representing 
+    the time remaining in the game in minutes.
+
+    Params:
+        df (pd.DataFrame): DataFrame with game data
+
+    Returns:
+        pd.DataFrame: DataFrame with time remaining in the game in minutes    
+    """
+    period_min = 12
+    periods_regular = 4
+    df['time_remaining'] = (np.max(periods_regular - df['period'], 0)*period_min + df['period_time_remaining'])
+    df = df.drop(columns=['period', 'period_time_remaining'])
+    return df
 
 
 def prepare_data(seasons: int, seed: int, test_size: float, n: int | None, frac: float | None) -> DataSet:
@@ -132,6 +150,9 @@ def prepare_data(seasons: int, seed: int, test_size: float, n: int | None, frac:
 
     X_train = pd.merge(df_train, df_gameflow_train, left_on='game_id', right_on='game_id')
     X_test = pd.merge(df_test, df_gameflow_test, left_on='game_id', right_on='game_id')
+
+    X_train = prepare_time(X_train)
+    X_test = prepare_time(X_test)
 
     for df in [X_train, X_test]:
         df = augument_dataset(df)

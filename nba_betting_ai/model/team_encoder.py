@@ -21,8 +21,12 @@ class TeamEncoder(nn.Module):
         layers = [
             nn.Linear(self.embedding_dim + feature_cols, hidden_dim, dtype=torch.float64), nn.ReLU()
         ] + [
-            nn.Linear(hidden_dim, hidden_dim, dtype=torch.float64), nn.ReLU()
-        ] * (no_layers - 1)
+            nn.BatchNorm1d(hidden_dim),
+            nn.Linear(hidden_dim, hidden_dim, dtype=torch.float64),
+            nn.ReLU()
+        ] * (no_layers - 1) + [
+            nn.BatchNorm1d(hidden_dim)
+        ]
         self.layers = nn.Sequential(*layers)
 
     def forward(self, data: torch.Tensor, team: torch.Tensor):

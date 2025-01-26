@@ -7,6 +7,7 @@ project_root = Path(__file__).parent.parent
 class ProjectPaths:
     logs = project_root / "logs"
     pg_dump = project_root / "pg_dump"
+    output = project_root / "output"
 
 
 proj_paths = ProjectPaths()

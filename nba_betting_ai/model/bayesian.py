@@ -33,15 +33,20 @@ class BayesianResultPredictor(nn.Module):
         self.away_encoder = TeamEncoder(team_count, team_features, embedding_dim, team_hidden_dim, team_layers)
 
         layers = [
-            nn.Linear(2*team_hidden_dim + 2, res_hidden_dim, dtype=torch.float64), nn.ReLU()
+            nn.Linear(2*team_hidden_dim + 2, res_hidden_dim, dtype=torch.float64),
+            nn.ReLU(),
+            nn.BatchNorm1d(res_hidden_dim)
         ] + [
-            nn.Linear(res_hidden_dim, res_hidden_dim, dtype=torch.float64), nn.ReLU()
+            nn.Linear(res_hidden_dim, res_hidden_dim, dtype=torch.float64),
+            nn.ReLU(),
+            nn.BatchNorm1d(res_hidden_dim)
         ] * (res_layers - 1)
         self.layers = nn.Sequential(*layers)
         self.time_scaling = time_scaling
         if self.time_scaling:
             self.time_encoder = nn.Linear(1, res_hidden_dim, dtype=torch.float64)
         self.relu = nn.ReLU()
+        self.bn = nn.BatchNorm1d(res_hidden_dim)
         self.output = nn.Linear(res_hidden_dim, 2, dtype=torch.float64)
     
     def forward(self, home_team, home_data, away_team, away_data, diff, time_remaining):
@@ -53,6 +58,6 @@ class BayesianResultPredictor(nn.Module):
         if self.time_scaling:
             time = self.time_encoder(time_remaining)
             mid = mid * time
-        final = self.relu(mid)
+        final = self.bn(self.relu(mid))
         return self.output(final)
     
