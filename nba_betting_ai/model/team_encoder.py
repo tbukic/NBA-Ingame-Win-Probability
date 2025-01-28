@@ -19,13 +19,14 @@ class TeamEncoder(nn.Module):
         if embedding_dim:
             self.embedding = nn.Embedding(team_count, embedding_dim)
         layers = [
-            nn.Linear(self.embedding_dim + feature_cols, hidden_dim, dtype=torch.float64), nn.ReLU()
+            nn.Linear(self.embedding_dim + feature_cols, hidden_dim, dtype=torch.float64),
+            nn.ReLU()
         ] + [
-            nn.BatchNorm1d(hidden_dim),
+            nn.BatchNorm1d(hidden_dim, dtype=torch.float64),
             nn.Linear(hidden_dim, hidden_dim, dtype=torch.float64),
             nn.ReLU()
         ] * (no_layers - 1) + [
-            nn.BatchNorm1d(hidden_dim)
+            nn.BatchNorm1d(hidden_dim, dtype=torch.float64)
         ]
         self.layers = nn.Sequential(*layers)
 

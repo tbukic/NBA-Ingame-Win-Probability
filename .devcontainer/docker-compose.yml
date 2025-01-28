@@ -25,6 +25,7 @@ services:
       POSTGRES_PORT: '5432'
       MLFLOW_TRACKING_URI: 'http://mlflow:5000'
       MLFLOW_REGISTRY_URI: 'http://mlflow:5000'
+      MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING: 'true'
     volumes:
       - ..:/workspaces/nba-betting-ai:cached
       - /var/run/docker.sock:/var/run/docker.sock
@@ -63,4 +64,5 @@ services:
       - "9001:9001"
     volumes:
         - /data/mlflow/nba-betting-ai/mlruns:/mlruns
+        - /data/mlflow/nba-betting-ai/mlartifacts:/mlartifacts
     restart: unless-stopped

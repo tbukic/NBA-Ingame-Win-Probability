@@ -35,21 +35,31 @@ class BayesianResultPredictor(nn.Module):
         layers = [
             nn.Linear(2*team_hidden_dim + 2, res_hidden_dim, dtype=torch.float64),
             nn.ReLU(),
-            nn.BatchNorm1d(res_hidden_dim)
+            nn.BatchNorm1d(res_hidden_dim, dtype=torch.float64)
         ] + [
             nn.Linear(res_hidden_dim, res_hidden_dim, dtype=torch.float64),
             nn.ReLU(),
-            nn.BatchNorm1d(res_hidden_dim)
+            nn.BatchNorm1d(res_hidden_dim, dtype=torch.float64)
         ] * (res_layers - 1)
         self.layers = nn.Sequential(*layers)
         self.time_scaling = time_scaling
         if self.time_scaling:
             self.time_encoder = nn.Linear(1, res_hidden_dim, dtype=torch.float64)
         self.relu = nn.ReLU()
-        self.bn = nn.BatchNorm1d(res_hidden_dim)
+        self.bn = nn.BatchNorm1d(res_hidden_dim, dtype=torch.float64)
         self.output = nn.Linear(res_hidden_dim, 2, dtype=torch.float64)
     
     def forward(self, home_team, home_data, away_team, away_data, diff, time_remaining):
+        import pandas as pd
+        print("inference!")
+        print(pd.DataFrame({
+            'home_team': home_team[:5].detach().numpy().flatten(),
+            'home_data': home_data[:5].detach().numpy().flatten(),
+            'away_team': away_team[:5].detach().numpy().flatten(),
+            'away_data': away_data[:5].detach().numpy().flatten(),
+            'diff': diff[:5].detach().numpy().flatten(),
+            'time_remaining': time_remaining[:5].detach().numpy().flatten(),
+        }))
         home = self.home_encoder(home_data, home_team)
         away = self.away_encoder(away_data, away_team)
         diff, time_remaining = diff.reshape(-1, 1), time_remaining.reshape(-1, 1)

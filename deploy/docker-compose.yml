@@ -1,0 +1,30 @@
+services:
+  nba-betting-ai:
+    build:
+      context: ..
+      dockerfile: ./deploy/.Dockerfile
+      args:
+        UBUNTU_VARIANT: "22.04"
+        USER: "accelerate"
+        UV_VERSION: "0.5.7"
+        PYTHON_VERSION: "3.12.8"
+        PROJDIR: /workspaces/nba-betting-ai
+        PROJECT_NAME: nba-betting-ai
+        POSTGRES_VERSION: 16
+    volumes:
+      - /home/${USERNAME}/.cache:/home/accelerate/.cache
+    environment:
+      POSTGRES_HOST: 'postgres'
+      POSTGRES_PORT: '5432'
+    env_file:
+      - ./pg-cred.env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16.6-bookworm
+    volumes:
+      - /data/mounts/postgres_deploy_nba_betting:/var/lib/postgresql/data
+    env_file:
+      - ./pg-cred.env
+    restart: on-failure

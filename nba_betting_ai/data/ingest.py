@@ -10,6 +10,7 @@ from sqlalchemy import Engine
 from tenacity import retry, wait_random_exponential, stop_after_attempt, before_log, retry_if_not_exception_type
 from time import sleep
 
+from nba_betting_ai.consts import game_info
 from nba_betting_ai.data.storage import check_table_exists, load_teams, load_games, get_uningested_games
 
 logger = logging.getLogger(__name__)
@@ -133,11 +134,8 @@ def scrape_gameflow(game_id: str, timeout: int = 60, headers: str | None = None)
     scores.columns = ['away_score', 'home_score']
     scores = scores.astype(int)
     scores.insert(0, 'game_id', game_id)
-    period_time_remaining = 12 * 60
-    period_time_remaining = 5 * 60 
-    period_time_remaining = df_plays['period'].max()
-    period_time_remaining = df_plays['pctimestring'].str.split(':', expand=True).astype(int)
-    period_time_remaining = period_time_remaining[0] * 60 + period_time_remaining[1]
+    min_remaining, sec_remaining = df_plays['pctimestring'].str.split(':', expand=True).astype(int)
+    period_time_remaining = min_remaining * game_info.sec_min + sec_remaining
     scores['period_time_remaining'] = period_time_remaining
     scores['period'] = df_plays['period']
     return scores

@@ -6,6 +6,7 @@ from sklearn.base import OneToOneFeatureMixin
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from typing import TypeAlias
 
+from nba_betting_ai.consts import game_info
 
 Scalers: TypeAlias = dict[str, OneToOneFeatureMixin]
 
@@ -25,30 +26,26 @@ def prepare_scalers(
     Returns:
         Scalers - dictionary of scalers
     """
-    period_min = 12
-    periods_regular = 4
-    min_to_sec = 60
-
     scaler_game_time = MinMaxScaler(feature_range=(-1, 1))
     scaler_game_time.fit(X_train[['time_remaining']])
     scaler_game_time.min_ = -1
-    scaler_game_time.scale_ = 2/(period_min*periods_regular*min_to_sec)
+    scaler_game_time.scale_ = 2/game_info.match_time
     
     scaler_score_diff = StandardScaler(with_mean=False)
     scaler_score_diff.fit(X_train[['score_diff']])
 
     scaler_final_score_diff = StandardScaler(with_mean=False)
     scaler_final_score_diff.fit(X_train[['final_score_diff']])
-
-    scaler_team_features = StandardScaler()
-    scaler_team_features.fit(X_train[team_features])
-
+    
     scalers = {
         'time_remaining': scaler_game_time,
         'score_diff': scaler_score_diff,
         'final_score_diff': scaler_final_score_diff,
-        'team_features': scaler_team_features
     }
+    if team_features:
+        scaler_team_features = StandardScaler()
+        scaler_team_features.fit(X_train[team_features])
+        scalers['team_features'] = scaler_team_features
 
     if save_path:
         save_path.parent.mkdir(parents=True, exist_ok=True)
@@ -85,6 +82,11 @@ def scale_data(df: pd.DataFrame, scalers: Scalers, team_features: list[str]) -> 
     df = df.copy()
     df['time_remaining'] = scalers['time_remaining'].transform(df[['time_remaining']])
     df['score_diff'] = scalers['score_diff'].transform(df[['score_diff']])
-    df['final_score_diff'] = scalers['final_score_diff'].transform(df[['final_score_diff']])
-    df[team_features] = scalers['team_features'].transform(df[team_features])
+    if 'final_score_diff' in df.columns:
+        df['final_score_diff'] = scalers['final_score_diff'].transform(df[['final_score_diff']])
+    if not team_features:
+        return df
+    transformed_values = scalers['team_features'].transform(df[team_features])
+    for i, feature in enumerate(team_features):
+        df[feature] = transformed_values[:, i]
     return df

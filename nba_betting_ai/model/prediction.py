@@ -5,11 +5,12 @@ import streamlit as st
 from nba_api.live.nba.endpoints import scoreboard
 from sklearn.preprocessing import LabelEncoder
 
+from nba_betting_ai.consts import proj_paths
 from nba_betting_ai.utils.utils import parse_time, convert_time_to_seconds
 
 
 @st.cache_resource
-def load_model(model_path="Model/multi_output_model.pkl"):
+def load_model(model_path=proj_paths.models / 'legacy.pkl'):
     """
     Loads the pre-trained MultiOutputClassifier model and caches it.
 

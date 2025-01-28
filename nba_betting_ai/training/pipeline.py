@@ -3,9 +3,9 @@ import pandas as pd
 
 from attrs import frozen
 
+from nba_betting_ai.consts import game_info
 from nba_betting_ai.data.processing import merge_game_data, prepare_game_data
 from nba_betting_ai.data.storage import get_engine, load_teams, load_games, load_gameflow
-
 
 def filter_nba_matchups(df_games: pd.DataFrame, df_teams: pd.DataFrame) -> pd.DataFrame:
     """
@@ -62,8 +62,26 @@ def train_test_split(
     if n is None and frac is None:
         frac = 1.0
     gameflow_train_mask = df_gameflow['game_id'].isin(df_games.loc[games_train_mask, 'game_id'])
-    gameflow_idx_train = df_gameflow[gameflow_train_mask].groupby('game_id').sample(n=n, frac=frac).index
-    gameflow_idx_test = df_gameflow[~gameflow_train_mask].groupby('game_id').sample(n=n, frac=frac).index
+    gameflow_idx_train = (
+        df_gameflow[gameflow_train_mask]
+        .groupby('game_id')
+        .sample(n=n, frac=frac)
+        .sort_values(
+            by=['game_id', 'period', 'period_time_remaining', 'home_score', 'away_score'],
+            ascending=[True, True, False, True, True]
+        )
+        .index
+    )
+    gameflow_idx_test = (
+        df_gameflow[~gameflow_train_mask]
+        .groupby('game_id')
+        .sample(n=n, frac=frac)
+        .sort_values(
+            by=['game_id', 'period', 'period_time_remaining', 'home_score', 'away_score'],
+            ascending=[True, True, False, True, True]
+        )
+        .index
+    )
 
     return games_idx_train, games_idx_test, gameflow_idx_train, gameflow_idx_test
 
@@ -101,9 +119,7 @@ def prepare_time(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame with time remaining in the game in minutes    
     """
-    period_min = 12
-    periods_regular = 4
-    df['time_remaining'] = (np.max(periods_regular - df['period'], 0)*period_min + df['period_time_remaining'])
+    df['time_remaining'] = (np.maximum(game_info.periods_regular - df['period'], 0)*game_info.period_min*game_info.sec_min + df['period_time_remaining'])
     df = df.drop(columns=['period', 'period_time_remaining'])
     return df
 

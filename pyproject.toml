@@ -6,14 +6,17 @@ authors = [{name="Tomislav Bukic", email="tomislav@bukic.net"}]
 readme = "README.md"
 dependencies = [
     "attrs>=24.3.0",
-    "bs4>=0.0.2",
+    "bokeh==2.4.3",
     "mlflow==2.19.0",
     "nba_api>=1.6.1",
+    "omegaconf>=2.3.0",
     "playwright>=1.49.1",
     "psycopg2-binary>=2.9.10",
+    "pynvml>=12.0.0",
     "requests>=2.32.3",
     "sbrscrape>=0.0.10",
     "scikit-learn>=1.6.0",
+    "seaborn>=0.13.2",
     "sqlalchemy>=2.0.36",
     "streamlit>=1.41.1",
     "tenacity>=9.0.0",
@@ -21,6 +24,7 @@ dependencies = [
     "torch>=2.5.1",
     "torchaudio>=2.5.1",
     "torchvision>=0.20.1",
+    "torchviz>=0.0.3",
     "tqdm>=4.67.1",
 ]
 

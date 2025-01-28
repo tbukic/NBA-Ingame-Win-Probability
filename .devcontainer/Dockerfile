@@ -58,6 +58,7 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
         wget \
         git \
         curl \
+        graphviz\
         # non-root user: \
         sudo \
     # Postgres
