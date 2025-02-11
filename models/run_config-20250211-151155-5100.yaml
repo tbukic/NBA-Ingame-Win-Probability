@@ -6,8 +6,8 @@ inputs_team:
 # - home_season_wins_avg
 # - away_season_pts_diff_avg
 # - home_season_pts_diff_avg
-- away_last_5_pts_diff_avg
-- home_last_5_pts_diff_avg
+# - away_last_5_pts_diff_avg
+# - home_last_5_pts_diff_avg
 target:
 - final_score_diff
 
@@ -30,9 +30,9 @@ training:
     weighted_loss: false
     clamp_var: null # 10
   model_config:
-    embedding_dim: 4
-    team_hidden_dim: 12 #8
-    team_layers: 4 #2
-    res_hidden_dim: 32
-    res_layers: 2 # 2
+    embedding_dim: 6
+    team_hidden_dim: 4 #8
+    team_layers: 2 #2
+    res_hidden_dim: 8
+    res_layers: 3 # 2
     time_scaling:  true

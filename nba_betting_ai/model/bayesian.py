@@ -45,21 +45,13 @@ class BayesianResultPredictor(nn.Module):
         self.time_scaling = time_scaling
         if self.time_scaling:
             self.time_encoder = nn.Linear(1, res_hidden_dim, dtype=torch.float64)
+            self.post_encode = nn.Linear(res_hidden_dim, res_hidden_dim, dtype=torch.float64)
+            self.pe_relu = nn.ReLU()
         self.relu = nn.ReLU()
         self.bn = nn.BatchNorm1d(res_hidden_dim, dtype=torch.float64)
         self.output = nn.Linear(res_hidden_dim, 2, dtype=torch.float64)
     
     def forward(self, home_team, home_data, away_team, away_data, diff, time_remaining):
-        import pandas as pd
-        print("inference!")
-        print(pd.DataFrame({
-            'home_team': home_team[:5].detach().numpy().flatten(),
-            'home_data': home_data[:5].detach().numpy().flatten(),
-            'away_team': away_team[:5].detach().numpy().flatten(),
-            'away_data': away_data[:5].detach().numpy().flatten(),
-            'diff': diff[:5].detach().numpy().flatten(),
-            'time_remaining': time_remaining[:5].detach().numpy().flatten(),
-        }))
         home = self.home_encoder(home_data, home_team)
         away = self.away_encoder(away_data, away_team)
         diff, time_remaining = diff.reshape(-1, 1), time_remaining.reshape(-1, 1)
@@ -67,7 +59,8 @@ class BayesianResultPredictor(nn.Module):
         mid = self.layers(input)
         if self.time_scaling:
             time = self.time_encoder(time_remaining)
-            mid = mid * time
+            mid = mid + time
+            mid = self.pe_relu(self.post_encode(mid))
         final = self.bn(self.relu(mid))
         return self.output(final)
     

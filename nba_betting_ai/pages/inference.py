@@ -82,17 +82,6 @@ if not st.session_state.get('database_ready', check_database_exists()):
 color_cycle = cycle(sns.color_palette("husl"))
 game_limit = 10
 
-wpaths_names = (
-    'run_config.yaml', 'scalers.pkl',
-    'bayesian_model-20250128-120945-loss_1_2943673074375524.pth',
-    'model_init.yaml'
-)
-nwpaths_names = (
-    'run_config.yaml', 'scalers.pkl',
-    'bayesian_model-20250128-125400-loss_1_3243823564165846.pth',
-    'model_init.yaml'
-)
-
 @st.cache_data
 def get_paths(*paths, prefix: str) -> tuple[Path]:
     return tuple(
@@ -112,15 +101,12 @@ class DataStore:
     X: pd.DataFrame
     teams: pd.DataFrame
     team_encoder: dict[str, int]
-    w_store: ModelStore
-    nw_store: ModelStore
+    store: ModelStore
 
 @st.cache_resource()
-def load_resources(wpaths: list[Path], nwpaths: list[Path]) -> DataStore:
-    w_model, w_scalers, w_team_features, w_config = load_model(*wpaths)
-    w_scalers.pop('final_score_diff', None)
-    nw_model, nw_scalers, nw_team_features, nw_config = load_model(*nwpaths)
-    nw_scalers.pop('final_score_diff', None)
+def load_resources(model_path: Path, model_init_path: Path, config_path: Path, scalers_path: Path) -> DataStore:
+    model, scalers, team_features, config = load_model(model_path, model_init_path, config_path, scalers_path)
+    scalers.pop('final_score_diff', None)
     data_params = {
         'seasons': 1,
         'seed': 0,
@@ -132,19 +118,39 @@ def load_resources(wpaths: list[Path], nwpaths: list[Path]) -> DataStore:
     X = data_prepared.X_test
     teams = data_prepared.teams
     team_encoder = dict(zip(teams['abbreviation'], teams.index))
-    w_store = ModelStore(w_model, w_scalers, w_team_features, w_config)
-    nw_store = ModelStore(nw_model, nw_scalers, nw_team_features, nw_config)
+    store = ModelStore(model, scalers, team_features, config)
     return DataStore(
-        X, teams, team_encoder, w_store, nw_store
+        X, teams, team_encoder, store
     )
 
-data_store = load_resources(
-    get_paths(*wpaths_names, prefix='w'),
-    get_paths(*nwpaths_names, prefix='nw')
+def select_model():
+    model_name = st.session_state.model
+    model_path = next(proj_paths.models.glob(f'*{model_name}*'))
+    model_descr = model_name.split('-', 1)[1]
+    model_init_path = model_path.with_suffix('.yaml').with_stem(f'model_init-{model_descr}')
+    config_path = model_path.with_suffix('.yaml').with_stem(f'run_config-{model_descr}')
+    scalers_path = model_path.with_suffix('.pkl').with_stem(f'scalers-{model_descr}')
+    st.session_state.data_store = load_resources(model_path, model_init_path, config_path, scalers_path)
+
+model_options = sorted(
+    model.stem
+    for model in proj_paths.models.glob('*.pth')
 )
+
+with st.sidebar:
+    st.header("Select model")
+    st.selectbox(
+        "Model",
+        key='model',
+        options=model_options,
+        on_change=select_model
+    )
+    if not 'data_store' in st.session_state:
+        select_model()
 
 def select_team(side: str):
     # st.write(f"{side.title()} team data:")
+    data_store = st.session_state.data_store
     st.selectbox(
         f"{side.title()} Team",
         key=f'{side}_team',
@@ -153,7 +159,7 @@ def select_team(side: str):
     )
     team_features = [
         feature
-        for feature in set(data_store.w_store.team_features) | set(data_store.nw_store.team_features)
+        for feature in data_store.store.team_features
         if side in feature
     ]
     for feature in team_features:
@@ -175,6 +181,7 @@ if not 'plot_data' in st.session_state:
 
 @st.cache_data
 def get_matchup_data(home_abbrev, away_abbrev):
+    data_store = st.session_state.data_store
     experiment = prepare_experiment(home_abbrev, away_abbrev, score_diff, data_store.X.copy(), data_store.teams)
     return experiment
 
@@ -199,19 +206,17 @@ def get_color():
 def get_plot_data(home_abbrev, away_abbrev, experiment: pd.DataFrame, score_diff: float) -> Line:
     experiment = experiment.copy()
     experiment['score_diff'] = score_diff
+    data_store = st.session_state.data_store
     results = calculate_probs_for_diff(
         abbrev_home=st.session_state.home_team,
         abbrev_away=st.session_state.away_team,
         experiment=experiment,
-        w_model=data_store.w_store.model,
-        w_scalers=data_store.w_store.scalers,
-        w_config=data_store.w_store.config, 
-        nw_model=data_store.nw_store.model,
-        nw_scalers=data_store.nw_store.scalers,
-        nw_config=data_store.nw_store.config,
+        model=data_store.store.model,
+        scalers=data_store.store.scalers,
+        team_features=data_store.store.team_features, 
         team_encoder=data_store.team_encoder
     )
-    line = Line(home_abbrev, away_abbrev, tuple(results['time_remaining']), tuple(results['probs_w']), score_diff)
+    line = Line(home_abbrev, away_abbrev, tuple(results['time_remaining']), tuple(results['probs']), score_diff)
     return line
 
 @st.dialog("Pick matchup name")
@@ -238,7 +243,8 @@ def add_matchup():
             st.errorn(f"Please select {team} team")
             return
     experiment = get_matchup_data(st.session_state.home_team, st.session_state.away_team)
-    for feature in set(data_store.w_store.team_features) | set(data_store.nw_store.team_features):
+    data_store = st.session_state.data_store
+    for feature in data_store.store.team_features:
         experiment[feature] = st.session_state[feature]
     add_named_matchup(experiment)
 
@@ -288,7 +294,7 @@ def reparametrize_plots():
 with st.sidebar:
     st.header("Add New Matchup")
     select_teams()
-    score_diff = st.slider("Score Difference: Away - Home", -50, 50, 0, step=1, key='score_diff', on_change=reparametrize_plots)
+    score_diff = st.slider("Score Difference: [Away - Home]", -50, 50, 0, step=1, key='score_diff', on_change=reparametrize_plots)
     st.markdown('---')
     select_to_delete = st.multiselect(
         options=list(st.session_state.matchups.keys()),

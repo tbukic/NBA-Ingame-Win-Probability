@@ -86,7 +86,7 @@ def run_training(
                 test_metrics = run_epoch(model, test_loader, Mode.EVAL, device, params['weighted_loss'], params['clamp_var'], optimizer)
                 mlflow.log_metrics(test_metrics, step=step)
             avg_loss = test_metrics['eval_avg_loss']
-            model_path = proj_paths.output / f'{config['model_name']}-{timestamp}-loss_{str(avg_loss).replace('.', '_')}.pth'
+            model_path = proj_paths.output / f'{config['model_name']}-{timestamp}-{step}.pth'
             torch.save(model.state_dict(), model_path)
             mlflow.log_artifact(model_path)
             if avg_loss < best_loss:

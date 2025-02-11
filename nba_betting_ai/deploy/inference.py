@@ -8,14 +8,10 @@ from omegaconf import OmegaConf
 from pathlib import Path
 from scipy.stats import norm
 from torch import nn
-from torch.utils.data import DataLoader
-from torchviz import make_dot
 
 from nba_betting_ai.consts import proj_paths, game_info
 from nba_betting_ai.model.bayesian import BayesianResultPredictor
 from nba_betting_ai.model.inputs import load_scalers, Scalers, scale_data
-from nba_betting_ai.training.dataset import NBADataset
-from nba_betting_ai.training.pipeline import prepare_data
 
 
 def download_model(run_id, model_uri) -> tuple[Path]:
@@ -27,50 +23,49 @@ def download_model(run_id, model_uri) -> tuple[Path]:
         model_uri (str): The MLFlow model uri.
 
     Returns:
-        tuple[Path]: The paths to the downloaded artifacts: config, scalers, model, model_init.
+        tuple[Path]: The paths to the downloaded artifacts: model, model_init, config, scalers.
     """
+    model_path = mlflow.artifacts.download_artifacts(model_uri, dst_path=proj_paths.models)
     config_path = mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path='run_config.yaml', dst_path=proj_paths.models)
     scalers_path = mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path='scalers.pkl', dst_path=proj_paths.models)
-    model_path = mlflow.artifacts.download_artifacts(model_uri, dst_path=proj_paths.models)
     model_init_path = mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path='model_init.yaml', dst_path=proj_paths.models)
     paths = tuple(
         Path(path)
-        for path in (config_path, scalers_path, model_path, model_init_path)      
+        for path in (model_path, model_init_path, config_path, scalers_path)      
     )
     return paths
 
-def download_model_to(run_id: str, model_uri: str, prefix: str) -> tuple[Path]:
+def download_model_to(model_uri: str) -> tuple[Path]:
     """
-    Downloads the model and its artifacts to the models directory, renaming them with a prefix.
-    Prefix is added to the stem of the file, and it is either 'w' for weighted model or
-    'nw' for non-weighted model.
+    Downloads the model and its artifacts to the models directory.
 
     Args:
-        run_id (str): The MLFlow run id.
         model_uri (str): The MLFlow model uri.
-        prefix (str): The prefix to add to the model artifacts.
 
     Returns:
         tuple[Path]: The paths to the downloaded artifacts: config, scalers, model, model_init.
     """
+    run_id = model_uri.split('/')[2]
     paths = download_model(run_id, model_uri)
-    new_paths = [
-        path.with_stem(f'{prefix}_{path.stem}')
-        for path in paths
+    model_path = paths[0]
+    model_descr = model_path.stem.split('-', 1)[1]
+    paths_w_descr = [
+        path.with_stem(f'{path.stem}-{model_descr}')
+        for path in paths[1:]
     ]
-    for path, new_path in zip(paths, new_paths):
+    for path, new_path in zip(paths[1:], paths_w_descr):
         path.rename(new_path)
-    return tuple(new_paths)
+    return (model_path, ) + tuple(paths_w_descr)
 
-def load_model(config_path: Path, scalers_path: Path, model_path: Path, model_init_path: Path) -> tuple[nn.Module, Scalers, list]:
+def load_model(model_path: Path, model_init_path: Path, config_path: Path, scalers_path: Path) -> tuple[nn.Module, Scalers, list]:
     """
     Loads the model, scalers, team features and config from the given paths.
 
     Args:
-        config_path (Path): The path to the config file.
-        scalers_path (Path): The path to the scalers file.
         model_path (Path): The path to the model file.
         model_init_path (Path): The path to the model init file.
+        config_path (Path): The path to the config file.
+        scalers_path (Path): The path to the scalers file.
 
     Returns:
         tuple[nn.Module, Scalers, list]: The model, scalers, team features and config.
@@ -78,7 +73,7 @@ def load_model(config_path: Path, scalers_path: Path, model_path: Path, model_in
     scalers = load_scalers(scalers_path)
     config = OmegaConf.load(config_path)
     model_init = OmegaConf.load(model_init_path)
-    team_features = config['inputs_team']
+    team_features = config['inputs_team'] or []
     model = BayesianResultPredictor(**model_init)
     model.load_state_dict(torch.load(model_path))
     model.eval()
@@ -143,17 +138,9 @@ def run_inference(model: nn.Module, data: dict[str, torch.Tensor]) -> tuple[np.n
     probs = norm.cdf(0, mu, std).flatten()
     return probs, mu, std
 
-def calculate_probs_for_diff(abbrev_home, abbrev_away, experiment, w_model, nw_model, w_scalers, nw_scalers, w_config, nw_config, team_encoder) -> pd.DataFrame:
-    nw_input = prepare_input_for_model(abbrev_home, abbrev_away, nw_config['inputs_team'], nw_scalers, experiment, team_encoder)
-    nw_probs, nw_mu, nw_std = run_inference(nw_model, nw_input)
-
-    w_input = prepare_input_for_model(abbrev_home, abbrev_away, w_config['inputs_team'], w_scalers, experiment, team_encoder)
-    w_probs, w_mu, w_std = run_inference(w_model, w_input)
-
-    weights = (0.5 - 0.5*nw_input['time_remaining']/nw_input['time_remaining'].max()).detach().numpy().flatten()
-    probs = weights*w_probs + (1-weights)*nw_probs
-    experiment['probs_nw'] = nw_probs
-    experiment['probs_w'] = w_probs
+def calculate_probs_for_diff(abbrev_home, abbrev_away, experiment, model, scalers, team_features, team_encoder) -> pd.DataFrame:
+    input = prepare_input_for_model(abbrev_home, abbrev_away, team_features, scalers, experiment, team_encoder)
+    probs, mu, std = run_inference(model, input)
     experiment['probs'] = probs
     return experiment
 

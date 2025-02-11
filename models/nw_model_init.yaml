@@ -1,8 +1,0 @@
-team_count: 30
-team_features: 1
-embedding_dim: 4
-team_hidden_dim: 12
-team_layers: 4
-res_hidden_dim: 32
-res_layers: 2
-time_scaling: true
