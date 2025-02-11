@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import torch
 
+from attrs import frozen
 from omegaconf import OmegaConf
 from pathlib import Path
 from scipy.stats import norm
@@ -100,11 +101,12 @@ def get_last_game(team_abbrev: str, plays_next: str, X: pd.DataFrame, teams: pd.
     ]
     return X_team
 
+
 def prepare_experiment(abbrev_home: str, abbrev_away: str, score_diff: int, X: pd.DataFrame, teams: pd.DataFrame) -> pd.DataFrame:
     last_game_data_home = get_last_game(abbrev_home, 'home', X, teams)
     last_game_data_away = get_last_game(abbrev_away, 'away', X, teams)
     team_input = pd.concat([last_game_data_home, last_game_data_away])
-    team_input['score_diff'] = score_diff
+    # team_input['score_diff'] = score_diff
     time_remaining = np.linspace(0, game_info.match_time, game_info.match_time + 1)[::-1]
     df_input = pd.DataFrame(team_input).transpose()
     df_input = pd.concat([df_input]*len(time_remaining), ignore_index=True)
@@ -154,3 +156,11 @@ def calculate_probs_for_diff(abbrev_home, abbrev_away, experiment, w_model, nw_m
     experiment['probs_w'] = w_probs
     experiment['probs'] = probs
     return experiment
+
+@frozen(slots=True)
+class Line:
+    home_team: str
+    away_team: str
+    x: tuple[float]
+    y: tuple[float]
+    score_diff: float

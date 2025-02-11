@@ -1,3 +1,4 @@
+import altair as alt
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -16,23 +17,12 @@ from typing import Any
 
 from nba_betting_ai.consts import proj_paths
 from nba_betting_ai.data.storage import check_table_exists, database_empty, get_engine, import_postgres_db
-from nba_betting_ai.deploy.inference import calculate_probs_for_diff, load_model, prepare_experiment
+from nba_betting_ai.deploy.inference import calculate_probs_for_diff, load_model, prepare_experiment, Line
 from nba_betting_ai.model.inputs import Scalers
 from nba_betting_ai.training.pipeline import prepare_data
 
 
-# status_placeholder = st.empty()
-
-_postgres_user = os.environ.get('POSTGRES_USER')
-_postgres_password = os.environ.get('POSTGRES_PASSWORD')
-_postgres_host = os.environ.get('POSTGRES_HOST')
-_postgres_port = os.environ.get('POSTGRES_PORT')
-_postgres_db = os.environ.get('POSTGRES_DB')
-_tables= ('games', 'teams', 'gameflow')
-
-
-@st.cache_resource()
-def check_database_exists(newest: tuple[Path, str]) -> bool:
+def check_database_exists() -> bool:
     engine = get_engine()
     if database_empty(engine):
         return False
@@ -43,46 +33,51 @@ def check_database_exists(newest: tuple[Path, str]) -> bool:
         return False
     return True
 
+@st.cache_resource()
+def pg_get_engine() -> Any:
+    return get_engine()
+
+engine = pg_get_engine()
+
+_tables= ('games', 'teams', 'gameflow')
+
 def upload_database(file: Path):
+    postgres_user = os.environ.get('POSTGRES_USER')
+    postgres_password = os.environ.get('POSTGRES_PASSWORD')
+    postgres_host = os.environ.get('POSTGRES_HOST')
+    postgres_port = os.environ.get('POSTGRES_PORT')
+    postgres_db = os.environ.get('POSTGRES_DB')
     now = time.strftime("%Y%m%d-%H%M%S")
-    backup_file = proj_paths.pg_dump / f'{now}.sql'
+    backup_file = proj_paths.pg_dump / f'upload_{now}.sql'
     file_content = file.read()
     backup_file.parent.mkdir(parents=True, exist_ok=True)
     backup_file.write_bytes(file_content)
     import_postgres_db(
         engine=get_engine(),
         backup_file=backup_file,
-        db_name=_postgres_db,
-        username=_postgres_user,
-        password=_postgres_password,
-        host=_postgres_host,
-        port=_postgres_port,
+        db_name=postgres_db,
+        username=postgres_user,
+        password=postgres_password,
+        host=postgres_host,
+        port=postgres_port,
         nonempty_proceed=True
     )
 
-def find_newest() -> tuple[Path, str]:
-    if not proj_paths.pg_dump.exists():
-        return proj_paths.pg_dump, "None"
-    newest = max(proj_paths.pg_dump.glob('*.sql'), key=lambda f: f.stat().st_mtime)
-    if newest is None:
-        return proj_paths.pg_dump, "None"
-    time = str(newest.stat().st_mtime)
-    return newest, time
+@st.dialog("Upload database")
+def prompt_upload_database():
+    # st.header("Importing the database")
+    uploaded_file = st.file_uploader("Choose a file", type=['sql'])
+    if uploaded_file is not None:
+        st.write("File uploaded successfully!")
+        upload_database(uploaded_file)
+        st.session_state['database_ready'] = True
+        st.rerun()
+    elif not st.session_state.get('database_ready', False):
+        st.stop()
 
-# This is used only for caching.
-newest_flag = find_newest()
-database_exists = check_database_exists(newest_flag)
-if not database_exists:
+if not st.session_state.get('database_ready', check_database_exists()):
     with st.sidebar:
-        st.header("Importing the database")
-        #if st.button("Import Database"):
-        uploaded_file = st.file_uploader("Choose a file", type=['sql'])
-        if uploaded_file is not None:
-            st.write("File uploaded successfully!")
-            upload_database(uploaded_file)
-        else:
-            st.warning("Please upload a database file first!")
-            st.stop()
+        st.button("Upload database", on_click=prompt_upload_database)
 
 color_cycle = cycle(sns.color_palette("husl"))
 game_limit = 10
@@ -98,6 +93,7 @@ nwpaths_names = (
     'model_init.yaml'
 )
 
+@st.cache_data
 def get_paths(*paths, prefix: str) -> tuple[Path]:
     return tuple(
         proj_paths.models / Path(path).with_stem(f'{prefix}_{Path(path).stem}')
@@ -142,158 +138,171 @@ def load_resources(wpaths: list[Path], nwpaths: list[Path]) -> DataStore:
         X, teams, team_encoder, w_store, nw_store
     )
 
-data_store = load_resources(get_paths(*wpaths_names, prefix='w'), get_paths(*nwpaths_names, prefix='nw'))
+data_store = load_resources(
+    get_paths(*wpaths_names, prefix='w'),
+    get_paths(*nwpaths_names, prefix='nw')
+)
 
+def select_team(side: str):
+    # st.write(f"{side.title()} team data:")
+    st.selectbox(
+        f"{side.title()} Team",
+        key=f'{side}_team',
+        options=data_store.teams['abbreviation'].tolist(),
+        placeholder=f"Pick a {side} team"        
+    )
+    team_features = [
+        feature
+        for feature in set(data_store.w_store.team_features) | set(data_store.nw_store.team_features)
+        if side in feature
+    ]
+    for feature in team_features:
+        step = 0.2 if 'avg' in feature else 1
+        st.number_input(
+            feature,
+            key=feature,
+            placeholder=0,
+            step=step,
+            format="%.1f" if 'avg' in feature else "%d"
+        )
 
-abbrev_away = 'CHI'
-abbrev_home = 'CHI'
-score_diff = -5
+if not 'matchups' in st.session_state:
+    st.session_state.matchups = {}
+if not 'plot_colors' in st.session_state:
+    st.session_state.plot_colors = {}
+if not 'plot_data' in st.session_state:
+    st.session_state.plot_data = {}
 
-@frozen
-class Line:
-    x: np.ndarray
-    y: np.ndarray
-
-@st.cache_resource()
-def init_experiment(abbrev_home: str | None = None, abbrev_away: str | None = None, score_diff: int = 0, _data_store=data_store) -> pd.DataFrame:
-    if any([abbrev_home is None, abbrev_away is None]):
-        return None
-    experiment = prepare_experiment(abbrev_home, abbrev_away, score_diff, _data_store.X.copy(), _data_store.teams) 
+@st.cache_data
+def get_matchup_data(home_abbrev, away_abbrev):
+    experiment = prepare_experiment(home_abbrev, away_abbrev, score_diff, data_store.X.copy(), data_store.teams)
     return experiment
 
-st.cache_resource()
-def get_plot_values(abbrev_home: str, abbrev_away: str, experiment: pd.DataFrame, _data_store: DataStore) -> Line:
-    print("Calculating probabilities...")
-    print(experiment[['home_team_id', 'home_team_abbreviation', 'away_team_id', 'away_team_abbreviation', 'home_last_5_pts_diff_avg', 'away_last_5_pts_diff_avg']].iloc[0])
-    print(f"{abbrev_home}")
-    print(f"{abbrev_away}")
+def generate_matchup_name(home_abbrev, away_abbrev) -> str:
+    simple_name = f'{away_abbrev} @ {home_abbrev}'
+    if simple_name not in st.session_state['matchups']:
+        return simple_name
+    i = 1
+    while (name:=f'{simple_name} ({i})') in st.session_state['matchups']:
+        i += 1
+    return name
+
+def rgb_to_hex(rgb):
+    return '#{:02x}{:02x}{:02x}'.format(int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+
+def get_color():
+    while (color:=rgb_to_hex(next(color_cycle))) in st.session_state.plot_colors.values():
+        pass
+    return color
+
+@st.cache_data
+def get_plot_data(home_abbrev, away_abbrev, experiment: pd.DataFrame, score_diff: float) -> Line:
+    experiment = experiment.copy()
+    experiment['score_diff'] = score_diff
     results = calculate_probs_for_diff(
-        abbrev_home, abbrev_away, experiment,
-        w_model=_data_store.w_store.model,
-        w_scalers=_data_store.w_store.scalers,
-        w_config=_data_store.w_store.config, 
-        nw_model=_data_store.nw_store.model,
-        nw_scalers=_data_store.nw_store.scalers,
-        nw_config=_data_store.nw_store.config,
-        team_encoder=_data_store.team_encoder
+        abbrev_home=st.session_state.home_team,
+        abbrev_away=st.session_state.away_team,
+        experiment=experiment,
+        w_model=data_store.w_store.model,
+        w_scalers=data_store.w_store.scalers,
+        w_config=data_store.w_store.config, 
+        nw_model=data_store.nw_store.model,
+        nw_scalers=data_store.nw_store.scalers,
+        nw_config=data_store.nw_store.config,
+        team_encoder=data_store.team_encoder
     )
-    line = Line(results['time_remaining'], results['probs'])
+    line = Line(home_abbrev, away_abbrev, tuple(results['time_remaining']), tuple(results['probs_w']), score_diff)
     return line
 
+@st.dialog("Pick matchup name")
+def add_named_matchup(experiment: pd.DataFrame):
+    home_abbrev = st.session_state.home_team
+    away_abbrev = st.session_state.away_team
+    default_name = generate_matchup_name(
+        home_abbrev=home_abbrev,
+        away_abbrev=away_abbrev
+    )
+    name = st.text_input("Matchup name", value=default_name)
+    if st.button("Save"):
+        if len(st.session_state.matchups) >= game_limit:
+            st.error(f"Cannot add more than {game_limit} matchups. Delete some to add more.")
+            return
+        st.session_state.matchups[name] = experiment
+        st.session_state.plot_colors[name] = get_color()
+        st.session_state.plot_data[name] = get_plot_data(home_abbrev, away_abbrev, experiment, st.session_state.score_diff)
+        st.rerun()
 
-if "games" not in st.session_state:
-    st.session_state.games = {}
-    st.session_state.colors = set()
+def add_matchup():
+    for team in ('home', 'away'):
+        if st.session_state.get(f'{team}_team') is None:
+            st.errorn(f"Please select {team} team")
+            return
+    experiment = get_matchup_data(st.session_state.home_team, st.session_state.away_team)
+    for feature in set(data_store.w_store.team_features) | set(data_store.nw_store.team_features):
+        experiment[feature] = st.session_state[feature]
+    add_named_matchup(experiment)
 
-def create_plot():
+def select_teams():
+    with st.form(key='team_selection'):
+        select_team('away')
+        select_team('home')
+        st.form_submit_button("Add matchup", on_click=add_matchup)
 
+def draw_plots():
     p = figure(title="Win Probability", x_axis_label='Game Time [s]', y_axis_label='P(Home Win)', width=600, height=400)
-    for name, game in st.session_state['games'].items():
-        p.line(game['x'], game['y'], line_width=2, legend_label=name, color=game['color'])
+    for name, game in st.session_state.plot_data.items():
+        p.line(game.x, game.y, line_width=2, legend_label=name, color=st.session_state.plot_colors[name])
     p.legend.location = "top_left"
     p.x_range.start = 0
     p.x_range.end = 3000
     p.y_range.start = 0
     p.y_range.end = 1
-    # dashed 
     st.bokeh_chart(p)
 
-print("FEATURES")
-print(data_store.w_store.team_features + data_store.nw_store.team_features)
+@st.dialog("Scrape data")
+def scrape_new_data():
+    st.write("Scraping data...")
+    # scrape_everything(
+    #     engine=engine,
+    #     season='2024-25',
+    #     start_date=None,
+    #     end_date=None,
+    #     headers=None
+    # )
+    st.rerun()
 
-if 'experiment' not in st.session_state:
-    abbrev_home = 'CHI'
-    abbrev_away = 'CHI'
-    score_diff = 0
-    st.session_state['experiment'] = init_experiment(abbrev_home, abbrev_away, score_diff, data_store)
-    for feature in data_store.w_store.team_features + data_store.nw_store.team_features:
-        st.session_state[feature] = st.session_state['experiment'][feature].iloc[0].item()
+def delete_selected_games():
+    for game in st.session_state.delete_select:
+        st.session_state.matchups.pop(game)
+        st.session_state.plot_colors.pop(game)
+        st.session_state.plot_data.pop(game)
+    st.rerun()
 
-def override_team_data(team_features, play_where, abbrev, data_store) -> dict[str, Any]:
-    team_features = [
-        col
-        for col in team_features
-        if col in play_where
-    ]
-    for feature in team_features:
-        st.number_input(
-            feature, key=feature, placeholder=0
-        )
+def reparametrize_plots():
+    st.session_state.plot_data = {
+        matchup: get_plot_data(data.home_team, data.away_team, st.session_state.matchups[matchup], st.session_state.score_diff)
+        for matchup, data in st.session_state.plot_data.items()
+    }
+    # st.rerun()
 
-def rgb_to_hex(rgb):
-    return '#{:02x}{:02x}{:02x}'.format(int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
-
-# Sidebar for inputs
 with st.sidebar:
     st.header("Add New Matchup")
-    team_abbrews = data_store.teams['abbreviation'].to_list()
-    st.write("Choose teams:")
-    home_team = st.selectbox("Home Team", [""] + team_abbrews)
-    override_team_data(data_store.w_store.team_features, 'home', home_team, data_store)
-    away_team = st.selectbox("Away Team", [""] + team_abbrews)
-    override_team_data(data_store.w_store.team_features, 'away', away_team, data_store)
-    score_diff = st.slider("Score Difference: Away - Home", -50, 50, 0, step=1)
-    name = st.text_input("Matchup Name", f'{away_team} @ {home_team} = {score_diff}')
-    if st.button("Add Game"):
-        if name in st.session_state.games:
-            st.error("Error: Game name already exists!")
-        if len(st.session_state.games) >= game_limit:
-            st.error(f"Error: Maximum of {game_limit} games reached! Please delete a game first.")
-        elif away_team and home_team:
-            experiment = init_experiment(home_team, away_team, score_diff, data_store)
-            for feature in data_store.w_store.team_features + data_store.nw_store.team_features:
-                experiment[feature] = st.session_state[feature]
-            st.session_state['experiment'] = experiment
-            line = get_plot_values(
-                home_team,
-                away_team,
-                st.session_state['experiment'],
-                data_store
-            )
-            color = rgb_to_hex(next(color_cycle))
-            while color in st.session_state.colors:
-                color = rgb_to_hex(next(color_cycle))
-            st.session_state.colors.add(color)
-            st.session_state.games[name] = {
-                'x': line.x,
-                'y': line.y,
-                'color': color,
-                'name': name
-            }
-            st.success(f"Game '{name}' added successfully!")
-        else:
-            not_selected = {
-                label :team
-                for label, team in {
-                    'home': home_team,
-                    'away': away_team
-                }.items()
-                if st.session_state.get(f'{team}_team', None) is None
-            }
-            st.warning(f"Error: {' & '.join(not_selected)} team is not selected!")
-    st.header("Reupload the database")
-    #if st.button("Import Database"):
-    uploaded_file = st.file_uploader("Choose a file", type=['sql'])
-    if uploaded_file is not None:
-        st.write("File uploaded successfully!")
-        upload_database(uploaded_file)
-
-st.header("Plot & Game Management")
-create_plot()
-
-if st.session_state.games:
-    selected_games = st.multiselect(
-        options=list(st.session_state.games.keys()),
+    select_teams()
+    score_diff = st.slider("Score Difference: Away - Home", -50, 50, 0, step=1, key='score_diff', on_change=reparametrize_plots)
+    st.markdown('---')
+    select_to_delete = st.multiselect(
+        options=list(st.session_state.matchups.keys()),
         key="delete_select",
-        label="Select games to delete"
+        label="Select games to delete",
     )
-    if st.button("Delete Selected Games"):
-        for name in selected_games:
-            color = st.session_state.games[name]['color']
-            del st.session_state.games[name]
-            st.session_state.colors.remove(color)
-        #status_placeholder.success(f"Deleted {len(selected_games)} games!")
-        st.rerun()
-else:
-    st.info("No games to delete. Add a game first!")
-
+    if select_to_delete:
+        st.button("Delete selected games", on_click=delete_selected_games)
+    st.markdown('---')
+    st.header("Upgrade database")
+    col_left, col_right = st.columns(2)
+    with col_left:
+        st.button("Scrape data", on_click=scrape_new_data)
+    with col_right:
+        st.button("New database", on_click=prompt_upload_database)
+    
+draw_plots()
