@@ -5,6 +5,7 @@ description = ""
 authors = [{name="Tomislav Bukic", email="tomislav@bukic.net"}]
 readme = "README.md"
 dependencies = [
+    "altair>=5.5.0",
     "attrs>=24.3.0",
     "bokeh==2.4.3",
     "mlflow==2.19.0",
@@ -45,21 +46,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.poe.tasks]
-
-    [tool.poe.tasks.pre_commit]
-    shell = "pre-commit install"
-
-    [tool.poe.tasks.post_install]
-    sequence = ["pre_commit"]
-
     [tool.poe.tasks.deploy]
     shell = "docker compose -f deploy/docker-compose.yml up"
 
     [tool.poe.tasks.dev]
-    shell = "fastapi dev nba-betting-ai/app.py"
+    shell = "streamlit run nba_betting_ai/app.py"
     
     [tool.poe.tasks.app]
-    shell = "fastapi run nba-betting-ai/app.py --port ${PORT:-80}"
+    shell = "streamlit run nba_betting_ai/app.py --port ${PORT:-80}"
     args = [{ name = "PORT", positional = true}]
 
 [tool.pytest.ini_options]
