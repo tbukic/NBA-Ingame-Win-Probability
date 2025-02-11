@@ -17,7 +17,7 @@ from typing import Any
 
 from nba_betting_ai.consts import proj_paths
 from nba_betting_ai.data.storage import check_table_exists, database_empty, get_engine, import_postgres_db
-from nba_betting_ai.deploy.inference import calculate_probs_for_diff, load_model, prepare_experiment, Line
+from nba_betting_ai.deploy.inference_bayesian import calculate_probs_for_diff, load_model, prepare_experiment, Line
 from nba_betting_ai.model.inputs import Scalers
 from nba_betting_ai.training.pipeline import prepare_data
 
@@ -122,31 +122,6 @@ def load_resources(model_path: Path, model_init_path: Path, config_path: Path, s
     return DataStore(
         X, teams, team_encoder, store
     )
-
-def select_model():
-    model_name = st.session_state.model
-    model_path = next(proj_paths.models.glob(f'*{model_name}*'))
-    model_descr = model_name.split('-', 1)[1]
-    model_init_path = model_path.with_suffix('.yaml').with_stem(f'model_init-{model_descr}')
-    config_path = model_path.with_suffix('.yaml').with_stem(f'run_config-{model_descr}')
-    scalers_path = model_path.with_suffix('.pkl').with_stem(f'scalers-{model_descr}')
-    st.session_state.data_store = load_resources(model_path, model_init_path, config_path, scalers_path)
-
-model_options = sorted(
-    model.stem
-    for model in proj_paths.models.glob('*.pth')
-)
-
-with st.sidebar:
-    st.header("Select model")
-    st.selectbox(
-        "Model",
-        key='model',
-        options=model_options,
-        on_change=select_model
-    )
-    if not 'data_store' in st.session_state:
-        select_model()
 
 def select_team(side: str):
     # st.write(f"{side.title()} team data:")
@@ -291,7 +266,33 @@ def reparametrize_plots():
     }
     # st.rerun()
 
+def select_model():
+    model_name = st.session_state.model
+    model_path = next(proj_paths.models.glob(f'*{model_name}*'))
+    model_descr = model_name.split('-', 1)[1]
+    model_init_path = model_path.with_suffix('.yaml').with_stem(f'model_init-{model_descr}')
+    config_path = model_path.with_suffix('.yaml').with_stem(f'run_config-{model_descr}')
+    scalers_path = model_path.with_suffix('.pkl').with_stem(f'scalers-{model_descr}')
+    st.session_state.data_store = load_resources(model_path, model_init_path, config_path, scalers_path)
+    reparametrize_plots()
+
+model_options = sorted(
+    (
+        model.stem
+        for model in proj_paths.models.glob('*.pth')
+    ), reverse=True
+)
+
 with st.sidebar:
+    st.header("Select model")
+    st.selectbox(
+        "Model",
+        key='model',
+        options=model_options,
+        on_change=select_model
+    )
+    if not 'data_store' in st.session_state:
+        select_model()
     st.header("Add New Matchup")
     select_teams()
     score_diff = st.slider("Score Difference: [Away - Home]", -50, 50, 0, step=1, key='score_diff', on_change=reparametrize_plots)
