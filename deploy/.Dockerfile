@@ -53,16 +53,17 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
     && rm -rf /var/cache/apt \
     apt-get clean
 
-# Place executables in the environment at the front of the path
-ENV PATH="/app/.venv/bin:$PATH"
-WORKDIR ${PROJDIR}
-COPY ./.streamlit ./.streamlit
-COPY ./models ./models
-COPY ./nba_betting_ai ./nba_betting_ai
-COPY ./.python-version ./.python-version
-COPY ./pyproject.toml ./pyproject.toml
-COPY ./uv.lock ./uv.lock
-COPY ./README.md ./README.md
 
-CMD ["uv", "run", "streamlit", "run", "nba_betting_ai/app.py", "--server.address=0.0.0.0"]
+WORKDIR /app
 
+ENV UV_CACHE_DIR=/opt/uv-cache/
+RUN --mount=type=cache,target=${UV_CACHE_DIR} \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=.python-version,target=.python-version \
+    uv sync --frozen --no-install-project
+    
+ADD . /app
+RUN --mount=type=cache,target=${UV_CACHE_DIR} \
+    uv sync --frozen
+CMD ["uv", "run", "poe", "app"]
