@@ -51,10 +51,10 @@ build-backend = "hatchling.build"
     shell = "docker compose -f deploy/docker-compose.yml up"
 
     [tool.poe.tasks.dev]
-    shell = "streamlit run nba_betting_ai/app.py"
+    shell = "streamlit run nba_betting_ai/app/start.py"
     
     [tool.poe.tasks.app]
-    shell = "streamlit run nba_betting_ai/app.py --port ${PORT:-80}"
+    shell = "streamlit run nba_betting_ai/app/start.py --server.port ${PORT:-80}"
     args = [{ name = "PORT", positional = true}]
 
 [tool.pytest.ini_options]

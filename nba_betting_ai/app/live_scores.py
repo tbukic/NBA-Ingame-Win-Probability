@@ -6,7 +6,7 @@ from nba_betting_ai.utils.data_providers import SbrOddsProvider
 from nba_betting_ai.utils.utils import moneyline_data, moneyline_to_probability, nba_live_data
 
 # Set Streamlit page config for better visuals
-st.set_page_config(page_title="NBA Live Scores", page_icon="🏀", layout="wide")
+# st.set_page_config(page_title="NBA Live Scores", page_icon="🏀", layout="wide")
 
 
 # Center the title of the app
@@ -140,8 +140,7 @@ def display_nba_live_data():
         time.sleep(60)
 
 
-if __name__ == "__main__":
-    display_nba_live_data()
+display_nba_live_data()
 
 
 
