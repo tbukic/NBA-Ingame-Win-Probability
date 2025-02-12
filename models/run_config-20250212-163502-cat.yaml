@@ -1,0 +1,32 @@
+experiment_name: NBAGames
+model_name: bayesian_model
+inputs_team:
+- away_season_pts_diff_avg
+- home_season_pts_diff_avg
+- away_last_5_pts_diff_avg
+- home_last_5_pts_diff_avg
+target:
+- final_score_diff
+data_params:
+  seasons: 2
+  seed: 66
+  test_size: 0.1
+  'n': 15
+  frac: null
+training:
+  algorithm: catboost_regressor
+  params:
+    learning_rate: 0.01
+    random_state: 47
+    colsample_bylevel: 0.5
+    subsample: 0.5
+    max_bin: 50
+    max_depth: 8
+    loss_function: RMSEWithUncertainty
+    task_type: CPU
+    iterations: 2000
+    boosting_type: Plain
+    bootstrap_type: Bernoulli
+    verbose: 500
+  model_config:
+    include_teams: false

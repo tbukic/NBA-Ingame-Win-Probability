@@ -8,7 +8,8 @@ import streamlit as st
 import time
 from attrs import frozen
 from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource
+from catboost import CatBoostRegressor
+from functools import partial
 from itertools import cycle
 
 from pathlib import Path
@@ -17,7 +18,9 @@ from typing import Any
 
 from nba_betting_ai.consts import proj_paths
 from nba_betting_ai.data.storage import check_table_exists, database_empty, get_engine, import_postgres_db
-from nba_betting_ai.deploy.inference_bayesian import calculate_probs_for_diff, load_model, prepare_experiment, Line
+from nba_betting_ai.deploy.inference_bayesian import calculate_probs_bayesian, load_bayesian_model, prepare_experiment
+from nba_betting_ai.deploy.inference_catboost import load_catboost_model, calculate_probs_catboost
+from nba_betting_ai.deploy.utils import Line
 from nba_betting_ai.model.inputs import Scalers
 from nba_betting_ai.training.pipeline import prepare_data
 
@@ -91,7 +94,7 @@ def get_paths(*paths, prefix: str) -> tuple[Path]:
 
 @frozen
 class ModelStore:
-    model: nn.Module
+    model: nn.Module | CatBoostRegressor
     scalers: dict[str, Scalers]
     team_features: pd.DataFrame
     config: dict[str, Any]
@@ -104,8 +107,12 @@ class DataStore:
     store: ModelStore
 
 @st.cache_resource()
-def load_resources(model_path: Path, model_init_path: Path, config_path: Path, scalers_path: Path) -> DataStore:
-    model, scalers, team_features, config = load_model(model_path, model_init_path, config_path, scalers_path)
+def load_resources(model_path: Path, config_path: Path, scalers_path: Path) -> DataStore:
+    if model_path.stem.startswith('bayesian_model'):
+        model_init_path = config_path.with_suffix('.yaml').with_stem(config_path.stem.replace('run_config', 'model_init'))
+        model, scalers, team_features, config = load_bayesian_model(model_path, model_init_path, config_path, scalers_path)
+    elif model_path.stem.startswith('cb_model'):
+        model, scalers, team_features, config = load_catboost_model(model_path, config_path, scalers_path)
     scalers.pop('final_score_diff', None)
     data_params = {
         'seasons': 1,
@@ -123,28 +130,37 @@ def load_resources(model_path: Path, model_init_path: Path, config_path: Path, s
         X, teams, team_encoder, store
     )
 
+def init_team_features(side: str, team_features: list[str]):
+    team_abbrev = st.session_state[f'{side}_team']
+    dummy_experiment = get_matchup_data(team_abbrev, team_abbrev)
+    start_data = dummy_experiment.iloc[0]
+    for feature in team_features:
+        st.session_state[feature] = start_data[feature]
+
+@st.fragment()
 def select_team(side: str):
-    # st.write(f"{side.title()} team data:")
     data_store = st.session_state.data_store
-    st.selectbox(
-        f"{side.title()} Team",
-        key=f'{side}_team',
-        options=data_store.teams['abbreviation'].tolist(),
-        placeholder=f"Pick a {side} team"        
-    )
     team_features = [
         feature
         for feature in data_store.store.team_features
         if side in feature
     ]
+    st.selectbox(
+        f"{side.title()} Team",
+        key=f'{side}_team',
+        options=data_store.teams['abbreviation'].tolist(),
+        placeholder=f"Pick a {side} team",
+        on_change=partial(init_team_features, side, team_features)
+    )
+    if team_features and team_features[0] not in st.session_state:
+        init_team_features(side, team_features)
     for feature in team_features:
         step = 0.2 if 'avg' in feature else 1
         st.number_input(
             feature,
             key=feature,
-            placeholder=0,
             step=step,
-            format="%.1f" if 'avg' in feature else "%d"
+            format="%.2f" if 'avg' in feature else "%d"
         )
 
 if not 'matchups' in st.session_state:
@@ -157,6 +173,7 @@ if not 'plot_data' in st.session_state:
 @st.cache_data
 def get_matchup_data(home_abbrev, away_abbrev):
     data_store = st.session_state.data_store
+    score_diff = st.session_state.get('score_diff', 0)
     experiment = prepare_experiment(home_abbrev, away_abbrev, score_diff, data_store.X.copy(), data_store.teams)
     return experiment
 
@@ -182,16 +199,19 @@ def get_plot_data(home_abbrev, away_abbrev, experiment: pd.DataFrame, score_diff
     experiment = experiment.copy()
     experiment['score_diff'] = score_diff
     data_store = st.session_state.data_store
-    results = calculate_probs_for_diff(
+    results = st.session_state.prob_function(
         abbrev_home=st.session_state.home_team,
         abbrev_away=st.session_state.away_team,
         experiment=experiment,
         model=data_store.store.model,
+        config=data_store.store.config,
         scalers=data_store.store.scalers,
         team_features=data_store.store.team_features, 
         team_encoder=data_store.team_encoder
     )
-    line = Line(home_abbrev, away_abbrev, tuple(results['time_remaining']), tuple(results['probs']), score_diff)
+    # Denormalizing time remaining
+    results.loc[:, 'game_time'] = experiment['time_remaining'].max() - experiment['time_remaining']
+    line = Line(home_abbrev, away_abbrev, results[['game_time', 'probs']], score_diff)
     return line
 
 @st.dialog("Pick matchup name")
@@ -224,21 +244,37 @@ def add_matchup():
     add_named_matchup(experiment)
 
 def select_teams():
-    with st.form(key='team_selection'):
+    with st.container(border=True):
         select_team('away')
+        st.markdown('---')
         select_team('home')
-        st.form_submit_button("Add matchup", on_click=add_matchup)
+        st.button("Add matchup", on_click=add_matchup)
 
 def draw_plots():
-    p = figure(title="Win Probability", x_axis_label='Game Time [s]', y_axis_label='P(Home Win)', width=600, height=400)
-    for name, game in st.session_state.plot_data.items():
-        p.line(game.x, game.y, line_width=2, legend_label=name, color=st.session_state.plot_colors[name])
+    if not st.session_state.plot_data:
+        return
+    p = figure(
+        title="Win Probability",
+        x_axis_label='Game Time [s]',
+        y_axis_label='P(Home Win)',
+        background_fill_color="white",
+        width=600,
+        height=400
+    )
+    for name, line in st.session_state.plot_data.items():
+        p.line(
+            line.data['game_time'],
+            line.data['probs'], 
+            line_width=2,
+            legend_label=name,
+            color=st.session_state.plot_colors[name]
+        )
     p.legend.location = "top_left"
     p.x_range.start = 0
     p.x_range.end = 3000
     p.y_range.start = 0
     p.y_range.end = 1
-    st.bokeh_chart(p)
+    st.bokeh_chart(p, use_container_width=True)
 
 @st.dialog("Scrape data")
 def scrape_new_data():
@@ -264,22 +300,25 @@ def reparametrize_plots():
         matchup: get_plot_data(data.home_team, data.away_team, st.session_state.matchups[matchup], st.session_state.score_diff)
         for matchup, data in st.session_state.plot_data.items()
     }
-    # st.rerun()
 
 def select_model():
     model_name = st.session_state.model
     model_path = next(proj_paths.models.glob(f'*{model_name}*'))
     model_descr = model_name.split('-', 1)[1]
-    model_init_path = model_path.with_suffix('.yaml').with_stem(f'model_init-{model_descr}')
     config_path = model_path.with_suffix('.yaml').with_stem(f'run_config-{model_descr}')
     scalers_path = model_path.with_suffix('.pkl').with_stem(f'scalers-{model_descr}')
-    st.session_state.data_store = load_resources(model_path, model_init_path, config_path, scalers_path)
+    st.session_state.data_store = load_resources(model_path, config_path, scalers_path)
+    if model_path.suffix == '.pth':
+        st.session_state.prob_function = calculate_probs_bayesian
+    elif model_path.suffix == '.cbm':
+        st.session_state.prob_function = calculate_probs_catboost
     reparametrize_plots()
 
 model_options = sorted(
     (
         model.stem
-        for model in proj_paths.models.glob('*.pth')
+        for model in proj_paths.models.iterdir()
+        if model.suffix in ['.pth', '.cbm']
     ), reverse=True
 )
 
@@ -308,7 +347,8 @@ with st.sidebar:
     st.header("Upgrade database")
     col_left, col_right = st.columns(2)
     with col_left:
-        st.button("Scrape data", on_click=scrape_new_data)
+        pass
+        # st.button("Scrape data", on_click=scrape_new_data)
     with col_right:
         st.button("New database", on_click=prompt_upload_database)
     

@@ -57,7 +57,7 @@ def download_model_to(model_uri: str) -> tuple[Path]:
         path.rename(new_path)
     return (model_path, ) + tuple(paths_w_descr)
 
-def load_model(model_path: Path, model_init_path: Path, config_path: Path, scalers_path: Path) -> tuple[nn.Module, Scalers, list]:
+def load_bayesian_model(model_path: Path, model_init_path: Path, config_path: Path, scalers_path: Path) -> tuple[nn.Module, Scalers, list]:
     """
     Loads the model, scalers, team features and config from the given paths.
 
@@ -75,7 +75,7 @@ def load_model(model_path: Path, model_init_path: Path, config_path: Path, scale
     model_init = OmegaConf.load(model_init_path)
     team_features = config['inputs_team'] or []
     model = BayesianResultPredictor(**model_init)
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     model.eval()
     return model, scalers, team_features, config
 
@@ -138,16 +138,8 @@ def run_inference(model: nn.Module, data: dict[str, torch.Tensor]) -> tuple[np.n
     probs = norm.cdf(0, mu, std).flatten()
     return probs, mu, std
 
-def calculate_probs_for_diff(abbrev_home, abbrev_away, experiment, model, scalers, team_features, team_encoder) -> pd.DataFrame:
+def calculate_probs_bayesian(abbrev_home, abbrev_away, experiment, model, config, scalers, team_features, team_encoder) -> pd.DataFrame:
     input = prepare_input_for_model(abbrev_home, abbrev_away, team_features, scalers, experiment, team_encoder)
     probs, mu, std = run_inference(model, input)
-    experiment['probs'] = probs
+    experiment.loc[:, 'probs'] = probs
     return experiment
-
-@frozen(slots=True)
-class Line:
-    home_team: str
-    away_team: str
-    x: tuple[float]
-    y: tuple[float]
-    score_diff: float

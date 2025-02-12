@@ -153,6 +153,27 @@ wheels = [
 ]
 
 [[package]]
+name = "catboost"
+version = "1.2.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "graphviz" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "plotly" },
+    { name = "scipy" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d8/15/df409f6da7d3b41ef46231173e3cfc0d19f4b4931f799801402d51636636/catboost-1.2.7.tar.gz", hash = "sha256:3ed1658bd22c250a12f9c55cf238d654d7a87d9b45f063ec39965a8884a7e9d3", size = 71540826 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/8e/5b4d50505c7ffd2c2b7a8e534fd2db4cae6d76fa766f200c510907b8ddbd/catboost-1.2.7-cp312-cp312-macosx_11_0_universal2.whl", hash = "sha256:c7d3bb7f48f2655c365345b264734b556b5c13c48b69fc521627850911494667", size = 27012366 },
+    { url = "https://files.pythonhosted.org/packages/cb/df/bdeac38ba431b8fdf7e33fff3feb02858d3aee2f280fb2bdd8081e3273e8/catboost-1.2.7-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:081ff4e5510d6c2f837f0115ee629b23e3214c86f49e313bedbb0fbe696099bf", size = 98248489 },
+    { url = "https://files.pythonhosted.org/packages/69/83/8e461a36b7116edd716dca5dfdcf4cdf01bc94f764bacb27a9c0f547d8ab/catboost-1.2.7-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:9ea147a00720388fe7d7033c8cd92b08cef3b7535b22e4330b5ae8a0b86aeac1", size = 98686187 },
+    { url = "https://files.pythonhosted.org/packages/73/6a/bcd74a3d20104af87f882db6ea3931c48fe37b13f5f08b8a6b1eeecab0cc/catboost-1.2.7-cp312-cp312-win_amd64.whl", hash = "sha256:645082f23762c281a7e14fdc23b88e47a3e3bbf8655f5246d80194b104a8ada9", size = 101716634 },
+]
+
+[[package]]
 name = "certifi"
 version = "2024.12.14"
 source = { registry = "https://pypi.org/simple" }
@@ -1243,6 +1264,7 @@ dependencies = [
     { name = "altair" },
     { name = "attrs" },
     { name = "bokeh" },
+    { name = "catboost" },
     { name = "mlflow" },
     { name = "nba-api" },
     { name = "omegaconf" },
@@ -1280,6 +1302,7 @@ requires-dist = [
     { name = "altair", specifier = ">=5.5.0" },
     { name = "attrs", specifier = ">=24.3.0" },
     { name = "bokeh", specifier = "==2.4.3" },
+    { name = "catboost", specifier = ">=1.2.7" },
     { name = "mlflow", specifier = "==2.19.0" },
     { name = "nba-api", specifier = ">=1.6.1" },
     { name = "omegaconf", specifier = ">=2.3.0" },
@@ -1808,6 +1831,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/52/95efac704bf36b770a2522d88a6dee298042845d10bfb35f7ca0fcc36d91/playwright-1.49.1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cd9bc8dab37aa25198a01f555f0a2e2c3813fe200fef018ac34dfe86b34994b9", size = 43744353 },
     { url = "https://files.pythonhosted.org/packages/f9/97/a3fccc9aaa6da83890772e9980703b0ea6b1e1ad42042fb50df3aef6c641/playwright-1.49.1-py3-none-win32.whl", hash = "sha256:43b304be67f096058e587dac453ece550eff87b8fbed28de30f4f022cc1745bb", size = 34060663 },
     { url = "https://files.pythonhosted.org/packages/71/a9/bd88ac0bd498c91aab3aba2e393d1fa59f72a7243e9265ccbf4861ca4f64/playwright-1.49.1-py3-none-win_amd64.whl", hash = "sha256:47b23cb346283278f5b4d1e1990bcb6d6302f80c0aa0ca93dd0601a1400191df", size = 34060667 },
+]
+
+[[package]]
+name = "plotly"
+version = "6.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "narwhals" },
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9c/80/761c14012d6daf18e12b6d1e4f6b218e999bcceb694d7a9b180154f9e4db/plotly-6.0.0.tar.gz", hash = "sha256:c4aad38b8c3d65e4a5e7dd308b084143b9025c2cc9d5317fc1f1d30958db87d3", size = 8111782 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/77/a946f38b57fb88e736c71fbdd737a1aebd27b532bda0779c137f357cf5fc/plotly-6.0.0-py3-none-any.whl", hash = "sha256:f708871c3a9349a68791ff943a5781b1ec04de7769ea69068adcd9202e57653a", size = 14805949 },
 ]
 
 [[package]]
