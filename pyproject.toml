@@ -55,7 +55,6 @@ build-backend = "hatchling.build"
     
     [tool.poe.tasks.app]
     shell = "streamlit run nba_betting_ai/app/start.py --server.port ${PORT:-80}"
-    args = [{ name = "PORT", positional = true}]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

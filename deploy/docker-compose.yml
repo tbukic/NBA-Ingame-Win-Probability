@@ -11,8 +11,10 @@ services:
         PROJDIR: /workspaces/nba-betting-ai
         PROJECT_NAME: nba-betting-ai
         POSTGRES_VERSION: 16
+    ports:
+      - "80:80"
     volumes:
-      - /home/${USERNAME}/.cache:/home/accelerate/.cache
+      - /home/${USER}/.cache:/home/accelerate/.cache
     environment:
       POSTGRES_HOST: 'postgres'
       POSTGRES_PORT: '5432'
