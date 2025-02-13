@@ -101,7 +101,6 @@ def prepare_experiment(abbrev_home: str, abbrev_away: str, score_diff: int, X: p
     last_game_data_home = get_last_game(abbrev_home, 'home', X, teams)
     last_game_data_away = get_last_game(abbrev_away, 'away', X, teams)
     team_input = pd.concat([last_game_data_home, last_game_data_away])
-    # team_input['score_diff'] = score_diff
     time_remaining = np.linspace(0, game_info.match_time, game_info.match_time + 1)[::-1]
     df_input = pd.DataFrame(team_input).transpose()
     df_input = pd.concat([df_input]*len(time_remaining), ignore_index=True)

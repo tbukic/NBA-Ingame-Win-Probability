@@ -34,5 +34,4 @@ def calculate_probs_catboost(abbrev_home, abbrev_away, experiment, model, config
     std = np.sqrt(var_preds)
     probs = norm.cdf(0, mean - 0.5, std)
     experiment.loc[:, 'probs'] = probs
-    # experiment['probs'] = prob
     return experiment

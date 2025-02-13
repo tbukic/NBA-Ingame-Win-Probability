@@ -1,22 +1,24 @@
-import altair as alt
-import matplotlib.pyplot as plt
-import numpy as np
+import logging
 import os
 import pandas as pd
 import seaborn as sns
 import streamlit as st
+import threading
 import time
 from attrs import frozen
 from bokeh.plotting import figure
 from catboost import CatBoostRegressor
+from collections import deque
+from datetime import datetime
 from functools import partial
 from itertools import cycle
-
+from nba_api.stats.library.parameters import SeasonAll
 from pathlib import Path
 from torch import nn
 from typing import Any
 
 from nba_betting_ai.consts import proj_paths
+from nba_betting_ai.data.ingest import scrape_everything
 from nba_betting_ai.data.storage import check_table_exists, database_empty, get_engine, import_postgres_db
 from nba_betting_ai.deploy.inference_bayesian import calculate_probs_bayesian, load_bayesian_model, prepare_experiment
 from nba_betting_ai.deploy.inference_catboost import load_catboost_model, calculate_probs_catboost
@@ -77,10 +79,6 @@ def prompt_upload_database():
         st.rerun()
     elif not st.session_state.get('database_ready', False):
         st.stop()
-
-if not st.session_state.get('database_ready', check_database_exists()):
-    with st.sidebar:
-        st.button("Upload database", on_click=prompt_upload_database)
 
 color_cycle = cycle(sns.color_palette("husl"))
 game_limit = 10
@@ -276,17 +274,47 @@ def draw_plots():
     p.y_range.end = 1
     st.bokeh_chart(p, use_container_width=True)
 
+logs = deque()
+
+class StreamlitLogHandler(logging.Handler):
+    def emit(self, record):
+        logs.append(self.format(record))
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+handler = StreamlitLogHandler()
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 @st.dialog("Scrape data")
 def scrape_new_data():
-    st.write("Scraping data...")
-    # scrape_everything(
-    #     engine=engine,
-    #     season='2024-25',
-    #     start_date=None,
-    #     end_date=None,
-    #     headers=None
-    # )
-    st.rerun()
+    kwargs = {
+        'engine': engine,
+    }
+    if check_table_exists(engine, 'games'):
+        last_date = pd.read_sql('SELECT game_date FROM games ORDER BY game_date DESC LIMIT 1', engine)
+        last_date = datetime.strptime(last_date.iloc[0]['game_date'], '%Y-%m-%d').strftime('%m/%d/%Y') if last_date else None
+        kwargs['start_date'] = last_date
+        ingest_message = f'Scraping data from {last_date} to yesterday'
+    else:
+        kwargs['season'] = SeasonAll.current_season
+        ingest_message = f'Scraping data for the current season ({kwargs["season"]})'
+    thread = threading.Thread(target=scrape_everything, kwargs=kwargs)
+    thread.start()
+    with st.status(ingest_message):
+        while thread.is_alive():
+            while logs:
+                st.write(logs.popleft())
+            time.sleep(0.5)
+        st.write("Process completed!")
+    st.stop()
+
+if not st.session_state.get('database_ready', check_database_exists()):
+    with st.sidebar:
+        st.button("Upload database", on_click=prompt_upload_database)
+        st.button("Scrape data", on_click=scrape_new_data)
+        st.rerun()
 
 def delete_selected_games():
     for game in st.session_state.delete_select:
@@ -347,8 +375,7 @@ with st.sidebar:
     st.header("Upgrade database")
     col_left, col_right = st.columns(2)
     with col_left:
-        pass
-        # st.button("Scrape data", on_click=scrape_new_data)
+        st.button("Scrape data", on_click=scrape_new_data)
     with col_right:
         st.button("New database", on_click=prompt_upload_database)
     
