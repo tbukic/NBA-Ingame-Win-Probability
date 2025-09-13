@@ -1,6 +1,13 @@
 repos:
 - repo: https://github.com/fastai/nbdev
-  rev: 2.3.13
+  rev: 2.4.2
   hooks:
   - id: nbdev_clean
-    additional_dependencies: [setuptools]
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.11.9
+  hooks:
+  - id: ruff
+    name: ruff-check
+  - id: ruff
+    name: ruff-format
+    entry: ruff check --fix
