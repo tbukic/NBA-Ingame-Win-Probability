@@ -1,0 +1,27 @@
+experiment_name: NBAGames
+model_name: lin_model
+
+inputs_team:
+- away_season_pts_diff_avg
+- home_season_pts_diff_avg
+- away_last_5_pts_diff_avg
+- home_last_5_pts_diff_avg
+target:
+- final_score_diff
+
+data_params:
+  seasons: 2
+  seed: 66
+  test_size: 0.1
+  n: 15
+  frac: null
+  reserve_validation: true
+
+training:
+  algorithm: linear_logistic
+  params:
+    C: 1.0
+    max_iter: 1000
+  model_config:
+    include_teams: true
+

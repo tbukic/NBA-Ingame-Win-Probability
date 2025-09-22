@@ -22,8 +22,10 @@
 				"ms-toolsai.jupyter",
 				"ms-toolsai.vscode-jupyter-powertoys",
 				"eamodio.gitlens",
+				"charliermarsh.ruff",
 				"mechatroner.rainbow-csv",
-				"ms-python.debugpy"
+				"ms-python.debugpy",
+				"openai.chatgpt"
 			]
 		}
 	}

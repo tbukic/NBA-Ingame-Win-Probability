@@ -1,0 +1,37 @@
+experiment_name: NBAGames
+model_name: bayesian_model
+
+inputs_team:
+# - away_season_wins_avg
+# - home_season_wins_avg
+- away_season_pts_diff_avg
+- home_season_pts_diff_avg
+- away_last_5_pts_diff_avg
+- home_last_5_pts_diff_avg
+target:
+- final_score_diff
+
+data_params:
+  seasons: 2
+  seed: 66
+  test_size: 0.1
+  n: 15
+  frac: null
+  reserve_validation: true
+
+training:
+  algorithm: bayesian_nn
+  params:
+    learning_rate: 0.05
+    lr_gamma: 0.85
+    batch_size: 128
+    epochs: 80
+    eval_freq: 1
+    weight_decay: 0.5
+    weighted_loss: false
+  model_config:
+    embedding_dim: null
+    team_hidden_dim: 4
+    team_layers: 1
+    res_hidden_dim: 4
+    res_layers: 4

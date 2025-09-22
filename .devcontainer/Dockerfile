@@ -99,7 +99,9 @@ RUN echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc \
 
 RUN go run github.com/playwright-community/playwright-go/cmd/playwright@latest install chromium --with-deps
 
-USER $USERNAME
+ENV USER=$USERNAME
+ENV HOME=/home/$USERNAME
+USER $USER
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
