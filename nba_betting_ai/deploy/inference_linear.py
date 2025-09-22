@@ -25,7 +25,7 @@ def load_linear_model(model_path: Path, config_path: Path, scalers_path: Path) -
         model = pickle.load(f)
     scalers = load_scalers(scalers_path)
     config = OmegaConf.load(config_path)
-    team_features = config.get('inputs_team', []) or []
+    team_features = config.inputs_team if hasattr(config, 'inputs_team') and config.inputs_team else []
     return model, scalers, team_features, config
 
 
@@ -63,7 +63,17 @@ def calculate_probs_linear(
     experiment['home_team_abbreviation'] = abbrev_home
     experiment['away_team_abbreviation'] = abbrev_away
     X, _ = data_pipeline_linear(experiment, scalers, team_features, include_teams=True, target=None)
-    linear_type = config.get('linear_type', 'logistic')
+    
+    # Determine model type from config - check both linear_type and algorithm fields
+    linear_type = getattr(config, 'linear_type', None)
+    if linear_type is None:
+        # Fallback to algorithm field from training section
+        try:
+            algorithm = config.training.algorithm
+        except (AttributeError, KeyError):
+            algorithm = ''
+        linear_type = 'logistic' if 'logistic' in algorithm else 'regression'
+    
     if linear_type == 'logistic':
         probs = model.predict_proba(X.values)[:, 1]
     else:

@@ -22,6 +22,7 @@ from nba_betting_ai.data.ingest import scrape_everything
 from nba_betting_ai.data.storage import check_table_exists, database_empty, get_engine, import_postgres_db
 from nba_betting_ai.deploy.inference_bayesian import calculate_probs_bayesian, load_bayesian_model, prepare_experiment
 from nba_betting_ai.deploy.inference_catboost import load_catboost_model, calculate_probs_catboost
+from nba_betting_ai.deploy.inference_linear import load_linear_model, calculate_probs_linear
 from nba_betting_ai.deploy.utils import Line
 from nba_betting_ai.model.inputs import Scalers
 from nba_betting_ai.training.pipeline import prepare_data
@@ -93,9 +94,9 @@ def get_paths(*paths, prefix: str) -> tuple[Path]:
 @frozen
 class ModelStore:
     model: nn.Module | CatBoostRegressor
-    scalers: dict[str, Scalers]
-    team_features: pd.DataFrame
-    config: dict[str, Any]
+    scalers: Scalers
+    team_features: list
+    config: Any
 
 @frozen
 class DataStore:
@@ -106,11 +107,20 @@ class DataStore:
 
 @st.cache_resource()
 def load_resources(model_path: Path, config_path: Path, scalers_path: Path) -> DataStore:
-    if model_path.stem.startswith('bayesian_model'):
+    # Determine model type based on file extension
+    if model_path.suffix == '.pth':
+        # PyTorch model (Bayesian)
         model_init_path = config_path.with_suffix('.yaml').with_stem(config_path.stem.replace('run_config', 'model_init'))
         model, scalers, team_features, config = load_bayesian_model(model_path, model_init_path, config_path, scalers_path)
-    elif model_path.stem.startswith('cb_model'):
+    elif model_path.suffix == '.cbm':
+        # CatBoost model
         model, scalers, team_features, config = load_catboost_model(model_path, config_path, scalers_path)
+    elif model_path.suffix == '.pkl':
+        # Linear/Logistic model
+        model, scalers, team_features, config = load_linear_model(model_path, config_path, scalers_path)
+    else:
+        raise ValueError(f"Unsupported model file type: {model_path.suffix}")
+    
     scalers.pop('final_score_diff', None)
     data_params = {
         'seasons': 1,
@@ -197,6 +207,12 @@ def get_plot_data(home_abbrev, away_abbrev, experiment: pd.DataFrame, score_diff
     experiment = experiment.copy()
     experiment['score_diff'] = score_diff
     data_store = st.session_state.data_store
+    
+    # Check if prob_function is initialized
+    if not hasattr(st.session_state, 'prob_function') or st.session_state.prob_function is None:
+        st.error("Model not properly initialized. Please select a model first.")
+        return Line(home_team=home_abbrev, away_team=away_abbrev, data=pd.DataFrame(), score_diff=score_diff)
+    
     results = st.session_state.prob_function(
         abbrev_home=st.session_state.home_team,
         abbrev_away=st.session_state.away_team,
@@ -233,7 +249,7 @@ def add_named_matchup(experiment: pd.DataFrame):
 def add_matchup():
     for team in ('home', 'away'):
         if st.session_state.get(f'{team}_team') is None:
-            st.errorn(f"Please select {team} team")
+            st.error(f"Please select {team} team")
             return
     experiment = get_matchup_data(st.session_state.home_team, st.session_state.away_team)
     data_store = st.session_state.data_store
@@ -294,7 +310,7 @@ def scrape_new_data():
     }
     if check_table_exists(engine, 'games'):
         last_date = pd.read_sql('SELECT game_date FROM games ORDER BY game_date DESC LIMIT 1', engine)
-        last_date = datetime.strptime(last_date.iloc[0]['game_date'], '%Y-%m-%d').strftime('%m/%d/%Y') if last_date else None
+        last_date = datetime.strptime(last_date.iloc[0]['game_date'], '%Y-%m-%d').strftime('%m/%d/%Y') if not last_date.empty else None
         kwargs['start_date'] = last_date
         ingest_message = f'Scraping data from {last_date} to yesterday'
     else:
@@ -334,30 +350,36 @@ def _collect_models():
     found = []
     for root in roots:
         if root.exists():
-            found.extend(p for p in root.rglob('*') if p.suffix in ('.pth', '.cbm'))
-    return sorted({p.stem for p in found}, reverse=True)
+            for p in root.rglob('*'):
+                if p.suffix in ('.pth', '.cbm', '.pkl') and p.stem == 'model':
+                    model_type = p.parent.name
+                    found.append(model_type)
+    return sorted(set(found), reverse=True)
 
 def _find_model_path(name: str) -> Path:
     roots = [proj_paths.models, proj_paths.models / 'production']
     for root in roots:
         if not root.exists():
             continue
-        for p in root.rglob('*'):
-            if p.suffix in ('.pth', '.cbm') and p.stem == name:
-                return p
+        model_dir = root / name
+        if model_dir.exists():
+            for p in model_dir.iterdir():
+                if p.suffix in ('.pth', '.cbm', '.pkl') and p.stem == 'model':
+                    return p
     raise FileNotFoundError(name)
 
 def select_model():
     model_name = st.session_state.model
     model_path = _find_model_path(model_name)
-    model_descr = model_name.split('-', 1)[1]
-    config_path = model_path.with_suffix('.yaml').with_stem(f'run_config-{model_descr}')
-    scalers_path = model_path.with_suffix('.pkl').with_stem(f'scalers-{model_descr}')
+    config_path = model_path.parent / 'run_config.yaml'
+    scalers_path = model_path.parent / 'scalers.pkl'
     st.session_state.data_store = load_resources(model_path, config_path, scalers_path)
     if model_path.suffix == '.pth':
         st.session_state.prob_function = calculate_probs_bayesian
     elif model_path.suffix == '.cbm':
         st.session_state.prob_function = calculate_probs_catboost
+    elif model_path.suffix == '.pkl':
+        st.session_state.prob_function = calculate_probs_linear
     reparametrize_plots()
 
 model_options = _collect_models()
