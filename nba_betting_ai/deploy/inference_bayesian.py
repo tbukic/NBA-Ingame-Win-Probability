@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import torch
 
-from attrs import frozen
 from omegaconf import OmegaConf
 from pathlib import Path
 from scipy.stats import norm

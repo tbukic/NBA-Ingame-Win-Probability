@@ -30,10 +30,11 @@ def train_test_split(
         test_size: float,
         n: int | None = None,
         frac: float | None = None,
-        seed: int | None = None
+        seed: int | None = None,
+        reserve_validation: bool = False
     ) -> tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
     """
-    Split the games and game flow data into training and testing sets. Thes split is chronological,
+    Split the games and game flow data into training and testing sets. The split is chronological,
     with test set containing the most recent games. The game flow data is sampled in one of two ways:
     either by number of samples or by fraction of the data. If both are provided, the number of samples
     will be used. If neither are provided, the entire data set will be used.
@@ -45,23 +46,35 @@ def train_test_split(
         n (int | None): Number of samples to include in the training set
         frac (float | None): Fraction of the data to include in the training set
         seed (int | None): Random seed for reproducibility
+        reserve_validation (bool): If True, reserves the last test_size portion as holdout,
+            then splits the remainder into train/test. If False, uses standard train/test split.
 
     Returns:
         tuple[pd.Series, pd.Series, pd.Series, pd.Series]: Indices for the training and testing sets,
             particularly: games_idx_train, games_idx_test, gameflow_idx_train, gameflow_idx_test.
     """
-    limit_date = df_games['game_date'].quantile(1 - test_size)
-    games_train_mask = df_games['game_date'] < limit_date
-    games_idx_train = df_games[games_train_mask].index
-    games_idx_test = df_games[~games_train_mask].index
-    
     if seed is not None:
         np.random.seed(seed)
     if n is not None and frac is not None:
-        frac = None
+        frac = None  # n takes precedence
     if n is None and frac is None:
         frac = 1.0
-    gameflow_train_mask = df_gameflow['game_id'].isin(df_games.loc[games_train_mask, 'game_id'])
+    
+    train_quantile = (1 - 2 * test_size) if reserve_validation else (1 - test_size)
+    
+    games_train_mask = df_games['game_date'] < df_games['game_date'].quantile(train_quantile)
+    games_test_mask = ~games_train_mask
+    
+    if reserve_validation:
+        # Further restrict test mask to exclude holdout (last test_size portion)
+        holdout_quantile = 1 - test_size
+        games_test_mask = games_test_mask & (df_games['game_date'] < df_games['game_date'].quantile(holdout_quantile))
+    
+    games_idx_train = df_games[games_train_mask].index
+    games_idx_test = df_games[games_test_mask].index
+    
+    gameflow_train_mask = df_gameflow['game_id'].isin(df_games.loc[games_idx_train, 'game_id'])
+    gameflow_test_mask = df_gameflow['game_id'].isin(df_games.loc[games_idx_test, 'game_id'])
     gameflow_idx_train = (
         df_gameflow[gameflow_train_mask]
         .groupby('game_id')
@@ -73,7 +86,7 @@ def train_test_split(
         .index
     )
     gameflow_idx_test = (
-        df_gameflow[~gameflow_train_mask]
+        df_gameflow[gameflow_test_mask]
         .groupby('game_id')
         .sample(n=n, frac=frac)
         .sort_values(
@@ -124,7 +137,7 @@ def prepare_time(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def prepare_data(seasons: int, seed: int, test_size: float, n: int | None, frac: float | None) -> DataSet:
+def prepare_data(seasons: int, seed: int, test_size: float, n: int | None, frac: float | None, reserve_validation: bool = False) -> DataSet:
     """
     Prepare the data for training and testing. The data is split into training and testing sets, with
     the testing set containing the most recent games. The game flow data is sampled in one of two ways:
@@ -137,6 +150,9 @@ def prepare_data(seasons: int, seed: int, test_size: float, n: int | None, frac:
         test_size (float): Proportion of the data to include in the test set
         n (int | None): Number of samples to include in the training set
         frac (float | None): Fraction of the data to include in the training set
+        reserve_validation (bool): If True, reserve last test_size portion as holdout for final evaluation,
+                                  split remaining data into train/validation (60-20-20 split for test_size=0.2).
+                                  If False, use standard train/test split (80-20 split for test_size=0.2).
 
     Returns:
         DataSet: Data set for training
@@ -145,7 +161,6 @@ def prepare_data(seasons: int, seed: int, test_size: float, n: int | None, frac:
     df_teams = load_teams(engine)
     df_games = load_games(engine)
     seasons_available = sorted(df_games['season_id'].unique().tolist())
-    # If possible, taking one extra season to fill statistics for start of the first used season:
     seasons_of_interest = seasons_available[-seasons - 1:] if len(seasons_available) > seasons else seasons_available 
     drop_games = df_games[df_games['season_id'] == seasons_of_interest[0]]['game_id'].unique().tolist() \
                         if len(seasons_available) > seasons \
@@ -158,7 +173,7 @@ def prepare_data(seasons: int, seed: int, test_size: float, n: int | None, frac:
     df_games = merge_game_data(df_games, df_gameflow)
 
     games_idx_train, games_idx_test, gameflow_idx_train, gameflow_idx_test = train_test_split(
-        df_games, df_gameflow, test_size=test_size, n=n, seed=seed, frac=frac)
+        df_games, df_gameflow, test_size=test_size, n=n, seed=seed, frac=frac, reserve_validation=reserve_validation)
     df_train = df_games.loc[games_idx_train]
     df_test = df_games.loc[games_idx_test]
     df_gameflow_train = df_gameflow.loc[gameflow_idx_train]

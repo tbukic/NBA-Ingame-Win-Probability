@@ -68,11 +68,11 @@ class NBADataset(Dataset):
         data = {
             'home_team': torch.tensor(self.encode_team(self.home_team.iloc[idx]), dtype=torch.int32),
             'away_team': torch.tensor(self.encode_team(self.away_team.iloc[idx]), dtype=torch.int32),
-            'home_data': torch.tensor(self.home_data.iloc[idx].values, dtype=torch.float64),
-            'away_data': torch.tensor(self.away_data.iloc[idx].values, dtype=torch.float64),
-            'diff': torch.tensor(self.diff.iloc[idx], dtype=torch.float64),
-            'time_remaining': torch.tensor(self.time_remaining.iloc[idx], dtype=torch.float64),
-            'y': torch.tensor(self.y.iloc[idx].values, dtype=torch.float64)
+            'home_data': torch.tensor(self.home_data.iloc[idx].values, dtype=torch.float32),
+            'away_data': torch.tensor(self.away_data.iloc[idx].values, dtype=torch.float32),
+            'diff': torch.tensor(self.diff.iloc[idx], dtype=torch.float32),
+            'time_remaining': torch.tensor(self.time_remaining.iloc[idx], dtype=torch.float32),
+            'y': torch.tensor(self.y.iloc[idx].values, dtype=torch.float32)
         }
         return data
     

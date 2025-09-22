@@ -1,5 +1,3 @@
-import bs4 # type: ignore
-from bs4 import BeautifulSoup # type: ignore
 import requests # type: ignore
 import pandas as pd # type: ignore
 import pytz # type: ignore
@@ -57,9 +55,9 @@ def moneyline_to_probability(moneyline):
             probability = 100 / (moneyline + 100)
         else:
             probability = abs(moneyline) / (abs(moneyline) + 100)
-        return round(probability, 4)  # Return a decimal probability (e.g., 0.9091)
+        return round(probability, 4)
     except ValueError:
-        return "N/A"  # Handle cases where the moneyline is invalid
+        return "N/A"
 
 
 
@@ -83,40 +81,35 @@ def convert_time_to_seconds(time_str):
         minutes, seconds = time_str.split(':')
         return int(minutes) * 60 + int(seconds)
     except ValueError:
-        # Handle invalid time formats or missing values
         return None
 
 def parse_time(duration_str):
-  """
-  Converts duration formats (ISO 8601, MM:SS, or HH:MM) to 'min:s' format.
+    """
+    Converts duration formats (ISO 8601, MM:SS, or HH:MM) to 'min:s' format.
 
-  Args:
-      duration_str (str): The duration string to parse.
+    Args:
+        duration_str (str): The duration string to parse.
 
-  Returns:
-      str: The parsed duration in 'min:s' format or "N/A" if format is unsupported.
-  """
-  # Check for ISO 8601 duration format (PT05M20.00S)
-  match = re.match(r'PT(\d+)M(\d+(\.\d+)?)S', duration_str)
-  if match:
-    minutes = int(match.group(1))
-    seconds = float(match.group(2))
-    return f"{minutes}:{int(seconds)}"
+    Returns:
+        str: The parsed duration in 'min:s' format or "N/A" if format is unsupported.
+    """
+    match = re.match(r'PT(\d+)M(\d+(\.\d+)?)S', duration_str)
+    if match:
+        minutes = int(match.group(1))
+        seconds = float(match.group(2))
+        return f"{minutes}:{int(seconds)}"
 
-  # Handle MM:SS format
-  match = re.match(r'(\d+):(\d+)', duration_str)
-  if match:
-    minutes = int(match.group(1))
-    seconds = int(match.group(2))
-    return f"{minutes}:{seconds}"
+    match = re.match(r'(\d+):(\d+)', duration_str)
+    if match:
+        minutes = int(match.group(1))
+        seconds = int(match.group(2))
+        return f"{minutes}:{seconds}"
 
-  # Handle HH:MM format (hours and minutes)
-  match = re.match(r'(\d+):(\d+)', duration_str)
-  if match:
-    hours = int(match.group(1))
-    minutes = int(match.group(2))
-    total_minutes = hours * 60 + minutes
-    return f"{total_minutes}:00"  # Assuming seconds are 0 for HH:MM format
+    match = re.match(r'(\d+):(\d+)', duration_str)
+    if match:
+        hours = int(match.group(1))
+        minutes = int(match.group(2))
+        total_minutes = hours * 60 + minutes
+        return f"{total_minutes}:00"
 
-  # Return "N/A" for unsupported formats
-  return "N/A"
+    return "N/A"

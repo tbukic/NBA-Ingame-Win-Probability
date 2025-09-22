@@ -161,11 +161,11 @@ def select_team(side: str):
             format="%.2f" if 'avg' in feature else "%d"
         )
 
-if not 'matchups' in st.session_state:
+if 'matchups' not in st.session_state:
     st.session_state.matchups = {}
-if not 'plot_colors' in st.session_state:
+if 'plot_colors' not in st.session_state:
     st.session_state.plot_colors = {}
-if not 'plot_data' in st.session_state:
+if 'plot_data' not in st.session_state:
     st.session_state.plot_data = {}
 
 @st.cache_data
@@ -329,9 +329,27 @@ def reparametrize_plots():
         for matchup, data in st.session_state.plot_data.items()
     }
 
+def _collect_models():
+    roots = [proj_paths.models, proj_paths.models / 'production']
+    found = []
+    for root in roots:
+        if root.exists():
+            found.extend(p for p in root.rglob('*') if p.suffix in ('.pth', '.cbm'))
+    return sorted({p.stem for p in found}, reverse=True)
+
+def _find_model_path(name: str) -> Path:
+    roots = [proj_paths.models, proj_paths.models / 'production']
+    for root in roots:
+        if not root.exists():
+            continue
+        for p in root.rglob('*'):
+            if p.suffix in ('.pth', '.cbm') and p.stem == name:
+                return p
+    raise FileNotFoundError(name)
+
 def select_model():
     model_name = st.session_state.model
-    model_path = next(proj_paths.models.glob(f'*{model_name}*'))
+    model_path = _find_model_path(model_name)
     model_descr = model_name.split('-', 1)[1]
     config_path = model_path.with_suffix('.yaml').with_stem(f'run_config-{model_descr}')
     scalers_path = model_path.with_suffix('.pkl').with_stem(f'scalers-{model_descr}')
@@ -342,13 +360,7 @@ def select_model():
         st.session_state.prob_function = calculate_probs_catboost
     reparametrize_plots()
 
-model_options = sorted(
-    (
-        model.stem
-        for model in proj_paths.models.iterdir()
-        if model.suffix in ['.pth', '.cbm']
-    ), reverse=True
-)
+model_options = _collect_models()
 
 with st.sidebar:
     st.header("Select model")
@@ -358,7 +370,7 @@ with st.sidebar:
         options=model_options,
         on_change=select_model
     )
-    if not 'data_store' in st.session_state:
+    if 'data_store' not in st.session_state:
         select_model()
     st.header("Add New Matchup")
     select_teams()

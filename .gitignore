@@ -6,6 +6,10 @@
 
 !config/
 !config/run_config.yaml
+!config/run_config_bayesian.yaml
+!config/run_config_catboost.yaml
+!config/run_config_linear_logistic.yaml
+!config/run_config_linear_regression.yaml
 config/config-**
 
 !deploy/

@@ -7,6 +7,10 @@ project_root = Path(__file__).parent.parent
 class ConfigPath:
     folder: Path = project_root / "config"
     default: Path = folder / "run_config.yaml"
+    bayesian: Path = folder / "run_config_bayesian.yaml"
+    catboost: Path = folder / "run_config_catboost.yaml"
+    linear_logistic: Path = folder / "run_config_linear_logistic.yaml"
+    linear_regression: Path = folder / "run_config_linear_regression.yaml"
 
 @frozen
 class ProjectPaths:

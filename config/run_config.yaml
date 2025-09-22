@@ -1,5 +1,5 @@
 experiment_name: NBAGames
-model_name: bayesian_model
+model_name: cb_model
 
 inputs_team:
 # - away_season_wins_avg
@@ -29,29 +29,44 @@ data_params:
 #     # L2 regularization to the model parameters
 #     weight_decay: 0.5
 #     weighted_loss: false
-#     clamp_var: null # 10
 #   model_config:
 #     embedding_dim: null
 #     team_hidden_dim: 4 #8
 #     team_layers: 1 #2
 #     res_hidden_dim: 4
 #     res_layers: 4 # 2
-#     time_scaling:  false
+
+# training:
+#   algorithm: catboost_regressor
+#   params:
+#     learning_rate: 0.01
+#     random_state: 47
+#     colsample_bylevel: 0.5
+#     subsample: 0.5
+#     max_bin: 50
+#     max_depth: 8
+#     loss_function: RMSEWithUncertainty
+#     task_type: CPU
+#     iterations: 2000
+#     boosting_type: Plain
+#     bootstrap_type: Bernoulli
+#     verbose: 500
+#   model_config:
+#     include_teams: true
+#     unify_home_away: true
+
 
 training:
-  algorithm: catboost_regressor
+  algorithm: linear_logistic
   params:
-    learning_rate: 0.01
-    random_state: 47
-    colsample_bylevel: 0.5
-    subsample: 0.5
-    max_bin: 50
-    max_depth: 8
-    loss_function: RMSEWithUncertainty
-    task_type: CPU
-    iterations: 2000
-    boosting_type: Plain
-    bootstrap_type: Bernoulli
-    verbose: 500
+    C: 1.0
+    max_iter: 1000
   model_config:
-    include_teams: false
+    include_teams: true
+
+# training:
+#   algorithm: linear_regression
+#   params:
+#     alpha: 1.0
+#   model_config:
+#     include_teams: true

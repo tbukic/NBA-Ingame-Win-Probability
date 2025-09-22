@@ -1,6 +1,5 @@
 import pandas as pd # type: ignore
 
-from datetime import datetime
 from sbrscrape import Scoreboard # type: ignore
 
 

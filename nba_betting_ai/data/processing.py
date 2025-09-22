@@ -91,7 +91,7 @@ def prepare_game_data(df_games: pd.DataFrame, df_gameflow: pd.DataFrame, groups:
     Returns:
         pd.DataFrame: DataFrame with game data
     """
-    if not groups in ['period', 'game']:
+    if groups not in ['period', 'game']:
         raise ValueError('Values for  must be either "period" or "game"')
     grouping_columns = ['game_id'] if groups == 'game' else ['game_id', 'period']
     drop_columns = ['period', 'period_time_remaining']  if groups == 'game' else ['period_time_remaining']

@@ -1,0 +1,33 @@
+experiment_name: NBAGames-FINAL
+model_name: bayesian_model
+inputs_team:
+- away_season_pts_diff_avg
+- home_season_pts_diff_avg
+- away_last_5_pts_diff_avg
+- home_last_5_pts_diff_avg
+target:
+- final_score_diff
+data_params:
+  seasons: 2
+  seed: 66
+  test_size: 0.1
+  'n': 15
+  frac: null
+  reserve_validation: false
+training:
+  algorithm: bayesian_nn
+  params:
+    learning_rate: 0.04904895864120466
+    lr_gamma: 0.9719065499114207
+    batch_size: 128
+    epochs: 80
+    eval_freq: 1
+    weight_decay: 7.434457384346708e-05
+    weighted_loss: false
+    seed: 29
+  model_config:
+    embedding_dim: null
+    team_hidden_dim: 5
+    team_layers: 2
+    res_hidden_dim: 53
+    res_layers: 4

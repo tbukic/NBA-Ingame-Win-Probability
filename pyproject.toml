@@ -12,12 +12,14 @@ dependencies = [
     "mlflow==2.19.0",
     "nba_api>=1.6.1",
     "omegaconf>=2.3.0",
+    "optuna>=4.5.0",
     "playwright>=1.49.1",
     "psycopg2-binary>=2.9.10",
     "pynvml>=12.0.0",
     "requests>=2.32.3",
     "sbrscrape>=0.0.10",
     "scikit-learn>=1.6.0",
+    "scoringrules>=0.7.1",
     "seaborn>=0.13.2",
     "sqlalchemy>=2.0.36",
     "streamlit>=1.41.1",
@@ -28,12 +30,15 @@ dependencies = [
     "torchvision>=0.20.1",
     "torchviz>=0.0.3",
     "tqdm>=4.67.1",
+    "optuna>=3.6.1",
+    "sympy>=1.13.1",
 ]
 
 
 [tool.uv]
 dev-dependencies = [
     "ipykernel>=6.29",
+    "ipywidgets>=8.1.7",
     "nbconvert>=7.16",
     "nbdev>=2.3",
     "pre-commit>=4.0",

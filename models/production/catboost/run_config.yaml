@@ -1,0 +1,52 @@
+experiment_name: NBAGames-FINAL
+model_name: cb_model
+inputs_team:
+- away_season_pts_diff_avg
+- home_season_pts_diff_avg
+- away_last_5_pts_diff_avg
+- home_last_5_pts_diff_avg
+target:
+- final_score_diff
+data_params:
+  seasons: 2
+  seed: 66
+  test_size: 0.1
+  'n': 15
+  frac: null
+  reserve_validation: false
+training:
+  algorithm: catboost_regressor
+  params:
+    learning_rate: 0.05603921543827893
+    random_state: 79
+    colsample_bylevel: 0.8706974315142683
+    subsample: 0.7712846702807941
+    max_bin: 32
+    max_depth: 6
+    loss_function: RMSEWithUncertainty
+    task_type: CPU
+    iterations: 617
+    boosting_type: Plain
+    bootstrap_type: Bernoulli
+    verbose: 500
+    l2_leaf_reg: 2.3891671239871104
+  model_config:
+    include_teams: true
+    unify_home_away: true
+inputs_numeric:
+- avg_points_team_A
+- avg_fg_pct_team_A
+- avg_three_point_pct_team_A
+- avg_ft_pct_team_A
+- avg_rebounds_team_A
+- avg_assists_team_A
+- avg_steals_team_A
+- avg_blocks_team_A
+- avg_points_team_B
+- avg_fg_pct_team_B
+- avg_three_point_pct_team_B
+- avg_ft_pct_team_B
+- avg_rebounds_team_B
+- avg_assists_team_B
+- avg_steals_team_B
+- avg_blocks_team_B
