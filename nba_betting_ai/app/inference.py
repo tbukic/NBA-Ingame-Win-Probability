@@ -177,6 +177,10 @@ if 'plot_colors' not in st.session_state:
     st.session_state.plot_colors = {}
 if 'plot_data' not in st.session_state:
     st.session_state.plot_data = {}
+if 'matchup_models' not in st.session_state:
+    st.session_state.matchup_models = {}
+if 'model_cache' not in st.session_state:
+    st.session_state.model_cache = {}
 
 @st.cache_data
 def get_matchup_data(home_abbrev, away_abbrev):
@@ -186,7 +190,8 @@ def get_matchup_data(home_abbrev, away_abbrev):
     return experiment
 
 def generate_matchup_name(home_abbrev, away_abbrev) -> str:
-    simple_name = f'{away_abbrev} @ {home_abbrev}'
+    model_name = st.session_state.model
+    simple_name = f'{away_abbrev} @ {home_abbrev} ({model_name})'
     if simple_name not in st.session_state['matchups']:
         return simple_name
     i = 1
@@ -202,26 +207,62 @@ def get_color():
         pass
     return color
 
+def load_and_cache_model(model_name: str) -> DataStore:
+    """Load a model and cache it for reuse. Returns the cached model if already loaded."""
+    if model_name in st.session_state.model_cache:
+        return st.session_state.model_cache[model_name]
+    
+    try:
+        model_path = _find_model_path(model_name)
+        config_path = model_path.parent / 'run_config.yaml'
+        scalers_path = model_path.parent / 'scalers.pkl'
+        
+        # Load the model resources
+        model_data_store = load_resources(model_path, config_path, scalers_path)
+        
+        # Cache the loaded model
+        st.session_state.model_cache[model_name] = model_data_store
+        
+        return model_data_store
+        
+    except Exception as e:
+        st.error(f"Failed to load model '{model_name}': {str(e)}")
+        raise e
+
 @st.cache_data
-def get_plot_data(home_abbrev, away_abbrev, experiment: pd.DataFrame, score_diff: float) -> Line:
+def get_plot_data(home_abbrev, away_abbrev, experiment: pd.DataFrame, score_diff: float, model_name: str) -> Line:
     experiment = experiment.copy()
     experiment['score_diff'] = score_diff
-    data_store = st.session_state.data_store
     
-    # Check if prob_function is initialized
-    if not hasattr(st.session_state, 'prob_function') or st.session_state.prob_function is None:
-        st.error("Model not properly initialized. Please select a model first.")
+    # Load the correct model resources for this specific model (using cache)
+    try:
+        model_data_store = load_and_cache_model(model_name)
+        model_path = _find_model_path(model_name)
+        
+        # Determine the correct probability function based on model type
+        if model_path.suffix == '.pth':
+            prob_function = calculate_probs_bayesian
+        elif model_path.suffix == '.cbm':
+            prob_function = calculate_probs_catboost
+        elif model_path.suffix == '.pkl':
+            prob_function = calculate_probs_linear
+        else:
+            st.error(f"Unsupported model type: {model_path.suffix}")
+            return Line(home_team=home_abbrev, away_team=away_abbrev, data=pd.DataFrame(), score_diff=score_diff)
+        
+    except Exception as e:
+        st.error(f"Failed to load model '{model_name}': {str(e)}")
         return Line(home_team=home_abbrev, away_team=away_abbrev, data=pd.DataFrame(), score_diff=score_diff)
     
-    results = st.session_state.prob_function(
-        abbrev_home=st.session_state.home_team,
-        abbrev_away=st.session_state.away_team,
+    results = prob_function(
+        abbrev_home=home_abbrev,
+        abbrev_away=away_abbrev,
         experiment=experiment,
-        model=data_store.store.model,
-        config=data_store.store.config,
-        scalers=data_store.store.scalers,
-        team_features=data_store.store.team_features, 
-        team_encoder=data_store.team_encoder
+        model=model_data_store.store.model,
+        config=model_data_store.store.config,
+        scalers=model_data_store.store.scalers,
+        team_features=model_data_store.store.team_features, 
+        team_encoder=model_data_store.team_encoder
     )
     # Denormalizing time remaining
     results.loc[:, 'game_time'] = experiment['time_remaining'].max() - experiment['time_remaining']
@@ -243,7 +284,8 @@ def add_named_matchup(experiment: pd.DataFrame):
             return
         st.session_state.matchups[name] = experiment
         st.session_state.plot_colors[name] = get_color()
-        st.session_state.plot_data[name] = get_plot_data(home_abbrev, away_abbrev, experiment, st.session_state.score_diff)
+        st.session_state.matchup_models[name] = st.session_state.model
+        st.session_state.plot_data[name] = get_plot_data(home_abbrev, away_abbrev, experiment, st.session_state.score_diff, st.session_state.model)
         st.rerun()
 
 def add_matchup():
@@ -337,13 +379,33 @@ def delete_selected_games():
         st.session_state.matchups.pop(game)
         st.session_state.plot_colors.pop(game)
         st.session_state.plot_data.pop(game)
+        st.session_state.matchup_models.pop(game, None)  # Use .pop(game, None) to avoid KeyError if key doesn't exist
     st.rerun()
 
 def reparametrize_plots():
-    st.session_state.plot_data = {
-        matchup: get_plot_data(data.home_team, data.away_team, st.session_state.matchups[matchup], st.session_state.score_diff)
-        for matchup, data in st.session_state.plot_data.items()
-    }
+    """Regenerate all plots with the new score difference, using each plot's original model."""
+    new_plot_data = {}
+    
+    for matchup_name in st.session_state.matchups.keys():
+        # Get the model that was used for this matchup
+        matchup_model = st.session_state.matchup_models.get(matchup_name, st.session_state.model)
+        
+        # Get the original plot data to extract team names
+        if matchup_name in st.session_state.plot_data:
+            original_line = st.session_state.plot_data[matchup_name]
+            home_abbrev = original_line.home_team
+            away_abbrev = original_line.away_team
+            
+            # Regenerate the plot data with the correct model
+            new_plot_data[matchup_name] = get_plot_data(
+                home_abbrev, 
+                away_abbrev, 
+                st.session_state.matchups[matchup_name], 
+                st.session_state.score_diff, 
+                matchup_model
+            )
+    
+    st.session_state.plot_data = new_plot_data
 
 def _collect_models():
     roots = [proj_paths.models, proj_paths.models / 'production']
@@ -368,21 +430,49 @@ def _find_model_path(name: str) -> Path:
                     return p
     raise FileNotFoundError(name)
 
+def preload_all_models():
+    """Preload all available models to cache them for faster access."""
+    model_options = _collect_models()
+    with st.status("Loading models...") as status:
+        for i, model_name in enumerate(model_options):
+            try:
+                status.update(label=f"Loading {model_name}...")
+                load_and_cache_model(model_name)
+            except Exception as e:
+                st.warning(f"Failed to preload model '{model_name}': {str(e)}")
+        status.update(label="All models loaded!", state="complete")
+
 def select_model():
     model_name = st.session_state.model
-    model_path = _find_model_path(model_name)
-    config_path = model_path.parent / 'run_config.yaml'
-    scalers_path = model_path.parent / 'scalers.pkl'
-    st.session_state.data_store = load_resources(model_path, config_path, scalers_path)
-    if model_path.suffix == '.pth':
-        st.session_state.prob_function = calculate_probs_bayesian
-    elif model_path.suffix == '.cbm':
-        st.session_state.prob_function = calculate_probs_catboost
-    elif model_path.suffix == '.pkl':
-        st.session_state.prob_function = calculate_probs_linear
-    reparametrize_plots()
+    try:
+        # Use the cached model loading
+        st.session_state.data_store = load_and_cache_model(model_name)
+        
+        model_path = _find_model_path(model_name)
+        if model_path.suffix == '.pth':
+            st.session_state.prob_function = calculate_probs_bayesian
+        elif model_path.suffix == '.cbm':
+            st.session_state.prob_function = calculate_probs_catboost
+        elif model_path.suffix == '.pkl':
+            st.session_state.prob_function = calculate_probs_linear
+            
+        # Don't regenerate existing plots when changing model selection
+        # Only the newly added matchups should use the new model
+        
+    except Exception as e:
+        st.error(f"❌ Failed to load model '{model_name}': {str(e)}")
+        # Keep previous model if loading fails
+        if 'data_store' not in st.session_state:
+            st.error("No fallback model available!")
+        else:
+            st.warning("Keeping previous model loaded")
 
 model_options = _collect_models()
+
+# Preload all models if not already done
+if 'models_preloaded' not in st.session_state:
+    preload_all_models()
+    st.session_state.models_preloaded = True
 
 with st.sidebar:
     st.header("Select model")
