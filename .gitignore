@@ -30,6 +30,9 @@ config/config-**
 !notebooks/
 !notebooks/**
 
+!paper/
+!paper/**
+
 !.streamlit/
 !.streamlit/**
 
