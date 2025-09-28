@@ -582,6 +582,8 @@ def train_catboost(config: OmegaConf, data: DataSet, scalers: dict, extra_tags: 
 
         run_id = run.info.run_id
     return TrainingResult(model_path, config_path, scalers_dst if scalers_src.exists() else None, eval_metrics, run_id)
+
+
 def train_bayesian(config: OmegaConf, data: DataSet, scalers: dict, extra_tags: dict | None = None, pruner: Callable[[int, dict[str, float]], bool] | None = None, save_local_artifacts: bool = True) -> TrainingResult:
     """
     Train Bayesian NN on NBA game outcomes.
