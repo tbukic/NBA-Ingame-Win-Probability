@@ -1,0 +1,7 @@
+team_count: 30
+team_features: 2
+embedding_dim: null
+team_hidden_dim: 4
+team_layers: 3
+res_hidden_dim: 22
+res_layers: 2

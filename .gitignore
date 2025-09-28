@@ -21,11 +21,11 @@ config/config-**
 !models/
 !models/**
 
-!nba_betting_ai/
-!nba_betting_ai/**
+!nba_ingame_prob/
+!nba_ingame_prob/**
 
-!nba_betting_ai/
-!nba_betting_ai/**
+!nba_ingame_prob/
+!nba_ingame_prob/**
 
 !notebooks/
 !notebooks/**

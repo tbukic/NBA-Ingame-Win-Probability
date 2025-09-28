@@ -1,5 +1,5 @@
 [project]
-name = "nba-betting-ai"
+name = "nba-ingame-prob"
 version = "0.1.0"
 description = ""
 authors = [{name="Tomislav Bukic", email="tomislav@bukic.net"}]
@@ -56,10 +56,10 @@ build-backend = "hatchling.build"
     shell = "docker compose -f deploy/docker-compose.yml up"
 
     [tool.poe.tasks.dev]
-    shell = "streamlit run nba_betting_ai/app/start.py"
+    shell = "streamlit run nba_ingame_prob/app/start.py"
     
     [tool.poe.tasks.app]
-    shell = "streamlit run nba_betting_ai/app/start.py --server.port ${PORT:-80}"
+    shell = "streamlit run nba_ingame_prob/app/start.py --server.port ${PORT:-80}"
 
 [tool.pytest.ini_options]
 minversion = "6.0"

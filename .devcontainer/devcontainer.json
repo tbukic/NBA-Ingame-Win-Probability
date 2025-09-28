@@ -1,15 +1,15 @@
 {
-    "name": "NBA-Betting-AI",
+    "name": "Nba-Ingame-Prob",
 	"dockerComposeFile": "docker-compose.yml",
-	"service": "nba-betting-ai",
-	"workspaceFolder": "/workspaces/nba-betting-ai",
+	"service": "nba-ingame-prob",
+	"workspaceFolder": "/workspaces/nba-ingame-prob",
 	"privileged": true,
 	"postCreateCommand": "if [ -d \".venv\" ]; then rm -rf .venv;fi && uv sync && uv run pre-commit install",
 	"customizations": {
 		"vscode": {
 			"settings": {
                 "terminal.integrated.defaultProfile.linux": "bash",
-				"python.defaultInterpreterPath": "/workspaces/nba-betting-ai/.venv/bin/python"
+				"python.defaultInterpreterPath": "/workspaces/nba-ingame-prob/.venv/bin/python"
 			},
             "profiles": {
                 "bash": {

@@ -1,5 +1,5 @@
 services:
-  nba-betting-ai:
+  nba-ingame-prob:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
@@ -14,8 +14,8 @@ services:
         USER_UID: "1000"
         USER_GID: "1000"
         UV_VERSION: "0.5.7"
-        PROJDIR: "/workspaces/nba-betting-ai"
-        PROJECT_NAME: "nba-betting-ai"
+        PROJDIR: "/workspaces/nba-ingame-prob"
+        PROJECT_NAME: "nba-ingame-prob"
     command: sleep infinity
     environment:
       POSTGRES_PASSWORD: 'develop_password'
@@ -27,7 +27,7 @@ services:
       MLFLOW_REGISTRY_URI: 'http://mlflow:5000'
       MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING: 'true'
     volumes:
-      - ..:/workspaces/nba-betting-ai:cached
+      - ..:/workspaces/nba-ingame-prob:cached
       - /var/run/docker.sock:/var/run/docker.sock
       - ${HOME}/.docker:${HOME}/.docker
       - ${HOME}/.bash_history:${HOME}/.bash_history

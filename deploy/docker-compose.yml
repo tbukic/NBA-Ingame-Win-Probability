@@ -1,5 +1,5 @@
 services:
-  nba-betting-ai:
+  nba-ingame-prob:
     build:
       context: ..
       dockerfile: ./deploy/.Dockerfile
@@ -8,8 +8,8 @@ services:
         USER: "accelerate"
         UV_VERSION: "0.5.7"
         PYTHON_VERSION: "3.12.8"
-        PROJDIR: /workspaces/nba-betting-ai
-        PROJECT_NAME: nba-betting-ai
+        PROJDIR: /workspaces/nba-ingame-prob
+        PROJECT_NAME: nba-ingame-prob
         POSTGRES_VERSION: 16
     ports:
       - "80:80"

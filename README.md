@@ -14,7 +14,7 @@ Data is scraped from NBA's official API via [nba-api](https://drive.proton.me/ur
 - `game_flows`
 
 ## Architecture
-That's an overview of the system, first, we scrape live moneyline data from NBA ESPN for the ongoing games, and also scrape other live moneyline data from different sportsbooks using Python scrapping package and Pandas to manipulate the data besides a real-time machine learning model that predict for each game the team's win probability, the model developed using Skiti-learn which is Logistic regression model, you can find the model here [Logistic Regression Model](https://github.com/Younes1337/nba-betting-ai/blob/main/Model/multi_output_model.pkl), then we used a streamlit UI to make a seamless dashboard for the live data also a page for model inference to test the model on a custom input.
+That's an overview of the system, first, we scrape live moneyline data from NBA ESPN for the ongoing games, and also scrape other live moneyline data from different sportsbooks using Python scrapping package and Pandas to manipulate the data besides a real-time machine learning model that predict for each game the team's win probability, the model developed using Skiti-learn which is Logistic regression model, you can find the model here [Logistic Regression Model](https://github.com/Younes1337/nba-ingame-prob/blob/main/Model/multi_output_model.pkl), then we used a streamlit UI to make a seamless dashboard for the live data also a page for model inference to test the model on a custom input.
 <img src="images/Arch.png"> 
 
 here's a dashboard example of real-time NBA games: it represents live games, and the score, price, and win probability of each team
@@ -187,8 +187,8 @@ When the sample input data above is processed by the model, the output is as fol
 ### 1. Clone the Repository
 Clone the repository to your local machine:
 ```bash
-git clone https://github.com/Younes1337/nba-betting-ai.git
-cd nba-betting-ai
+git clone https://github.com/Younes1337/nba-ingame-prob.git
+cd nba-ingame-prob
 ```
 ### 2. Install the requirements
 the project uses many requirements indicated in the requirements.txt file 
