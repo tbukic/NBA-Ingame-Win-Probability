@@ -17,7 +17,7 @@ poe dev
 poe app
 ```
 
-# Results
+## Results
 
 <img src="images/02-feature_importance-top_combined.png" alt="Feature importance" width="840">
 
@@ -32,12 +32,12 @@ poe app
 <img src="images/09-calibration_curve_catboost.png" alt="Best result calibration curve" width="640">
 
 
-# Main Limitations
+## Main Limitations
 
 * Normality assumption: Win probability from point-differential assumes Normal residuals.
 * Non-i.i.d. events: Multiple rows per game imply correlated errors.
 * Sparse game context: Missing possession indicator, bonus/penalty, timeouts, FT-in-progress, lineups.
 
-# Application
+## Application
 
 <img src="images/04-matchup-score5.png" alt="Example image from App" width="640">
