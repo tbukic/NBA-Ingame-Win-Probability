@@ -24,8 +24,8 @@ poe app
 
 | Algorithm            | log loss |   Brier score |        ECE |
 | -------------------- | ----------: | ---------: | ---------: |
-| Decisinon tree       |  0.47391883 | 0.16068687 | 0.01904558 |
-| Bayesian neuronal network      |  0.47566885 | 0.16084661 | 0.03956205 |
+| CatBoost DT       |  0.47391883 | 0.16068687 | 0.01904558 |
+| Bayesian-style NN    |  0.47566885 | 0.16084661 | 0.03956205 |
 | Linear regression   |  0.50244279 | 0.17062248 | 0.03859256 |
 | Logistic regression |  0.50294034 | 0.17027835 | 0.03969110 |
 
